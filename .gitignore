@@ -1,0 +1,11 @@
+# Global ignores
+node_modules
+.env
+dist
+*.log
+
+# Safety for subprojects
+frontend/node_modules
+backend/node_modules
+frontend/dist
+backend/dist
