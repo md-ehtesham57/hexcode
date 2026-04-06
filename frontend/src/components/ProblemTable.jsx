@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Bookmark, PencilIcon, Trash, TrashIcon, Plus } from "lucide-react";
 import { useActions } from "../store/useAction";
 import AddToPlaylistModal from "./AddToPlaylist";
-import CreatePlaylistModal from "./CreatePlaylistModal";
+import CreatePlaylistModel from "./CreatePlaylistModel";
 import { usePlaylistStore } from "../store/usePlaylistStore";
 
 
@@ -235,7 +235,7 @@ const ProblemsTable = ({ problems }) => {
       </div>
 
       {/* Modals */}
-      <CreatePlaylistModal
+      <CreatePlaylistModel
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreatePlaylist}
