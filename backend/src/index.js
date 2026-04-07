@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import { apiLimiter } from "./middleware/auth.rateLimit.js";
 import passport from "./config/passport.js";
+import cors from "cors";
 
 
 
@@ -11,20 +12,23 @@ import problemRoutes from "./routes/problem.routes.js";
 
 dotenv.config();
 
-
 const app = express();
+app.use(cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+}));
 app.use(passport.initialize());
 
 app.use("/api", apiLimiter);
 app.use(express.json());
 app.use(cookieParser());
 
-app.get("/" , (req, res) => {
+app.get("/", (req, res) => {
     res.send("Hello guys welcome to hexcode")
 })
 
-app.use("/api/v1/auth" , authRoutes);
-app.use("/api/v1/problems" , problemRoutes);
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/problems", problemRoutes);
 
 const PORT = process.env.PORT || 3000;
 

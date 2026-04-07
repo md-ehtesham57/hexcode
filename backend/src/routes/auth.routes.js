@@ -15,31 +15,31 @@ authRoutes.post("/login", authLimiter, login);
 
 //Google OAuth Login
 authRoutes.get(
-    "/google",
-    passport.authenticate("google", { scope: ["profile", "email"] })
+  "/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
 //Google OAuth Callback
 authRoutes.get(
-    "/google/callback",
-    passport.authenticate("google", {
-        session: false,
-        failureRedirect: "/login"
-    }),
-    (req, res) => {
-        res.cookie("refreshToken", req.user.refreshToken, {
-            httpOnly: true,
-            sameSite: "lax",
-            secure: process.env.NODE_ENV !== "development",
-            maxAge: 1000 * 60 * 60 * 24 * 7,
-        });
+  "/google/callback",
+  passport.authenticate("google", {
+    session: false,
+    failureRedirect: "http://localhost:5173/login"
+  }),
+  (req, res) => {
+    res.cookie("refreshToken", req.user.refreshToken, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV !== "development",
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    });
 
-        res.json({
-            success: true,
-            accessToken: req.user.accessToken,
-            user: req.user.user,
-        });
-    }
+    const { accessToken } = req.user;
+
+    res.redirect(
+      `http://localhost:5173/oauth-success?token=${accessToken}`
+    );
+  }
 );
 
 //GitHub Login
@@ -65,11 +65,11 @@ authRoutes.get(
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
 
-    res.json({
-      success: true,
-      accessToken: req.user.accessToken,
-      user: req.user.user,
-    });
+    const { accessToken } = req.user;
+
+    res.redirect(
+      `http://localhost:5173/oauth-success?token=${accessToken}`
+    );
   }
 );
 

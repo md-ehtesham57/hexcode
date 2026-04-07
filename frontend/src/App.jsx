@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
@@ -11,6 +11,7 @@ import Layout from "./layout/Layout";
 import AdminRoute from "./components/AdminRoute";
 import AddProblem from "./page/AddProblem";
 import ProblemPage from "./page/ProblemPage";
+import OAuthSuccess from "./page/oauth-success";
 
 const App = () => {
   const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
@@ -59,6 +60,7 @@ const App = () => {
             element={authUser ? <AddProblem /> : <Navigate to="/" />}
           />
         </Route>
+        <Route path="/oauth-success" element={<OAuthSuccess />} />
       </Routes>
     </div>
   );

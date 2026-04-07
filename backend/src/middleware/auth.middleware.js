@@ -3,6 +3,7 @@ import { db } from "../libs/db.js";
 
 export const authMiddleware = async (req, res, next) => {
   try {
+    console.log("AUTH HEADER:", req.headers.authorization);
     //Read from Authorization header
     const authHeader = req.headers.authorization;
 
@@ -36,15 +37,15 @@ export const authMiddleware = async (req, res, next) => {
       }
     });
 
-    if (user.isBanned) {
-      return res.status(403).json({
-        error: "Account banned"
-      });
-    }
-
     if (!user) {
       return res.status(404).json({
         message: "User not found"
+      });
+    }
+
+        if (user.isBanned) {
+      return res.status(403).json({
+        error: "Account banned"
       });
     }
 

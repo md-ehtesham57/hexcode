@@ -1,6 +1,6 @@
-import React , {useState} from 'react'
-import {useForm} from "react-hook-form"
-import {zodResolver} from "@hookform/resolvers/zod"
+import React, { useState } from 'react'
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { Link } from 'react-router-dom'
 import {
   Code,
@@ -11,43 +11,51 @@ import {
   Mail,
 } from "lucide-react";
 
-import {z} from "zod";
+import { z } from "zod";
 import AuthImagePattern from '../components/AuthImagePattern';
 import { useAuthStore } from '../store/useAuthStore';
 
 
 const LoginSchema = z.object({
-  email:z.string().email("Enter a valid email"),
-  password:z.string().min(6 , "Password must be atleast of 6 characters"),
+  email: z.string().email("Enter a valid email"),
+  password: z.string().min(6, "Password must be atleast of 6 characters"),
 
 })
 
 const LoginPage = () => {
 
-  const {isLoggingIn , login} = useAuthStore()
-  const [showPassword , setShowPassword] = useState(false);
+  const { isLoggingIn, login } = useAuthStore()
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
-    register ,
+    register,
     handleSubmit,
-    formState:{errors},
+    formState: { errors },
   } = useForm({
-    resolver:zodResolver(LoginSchema)
+    resolver: zodResolver(LoginSchema)
   })
 
-  const onSubmit = async (data)=>{
+  const handleGoogleLogin = () => {
+  window.location.href = "http://localhost:3000/api/v1/auth/google";
+};
+
+const handleGithubLogin = () => {
+  window.location.href = "http://localhost:3000/api/v1/auth/github";
+};
+
+  const onSubmit = async (data) => {
     try {
       await login(data)
-      
+
     } catch (error) {
-      console.error("Signup failed" , error)
+      console.error("Signup failed", error)
     }
   }
 
 
   return (
     <div className='h-screen grid lg:grid-cols-2'>
-        <div className="flex flex-col justify-center items-center p-6 sm:p-12">
+      <div className="flex flex-col justify-center items-center p-6 sm:p-12">
         <div className="w-full max-w-md space-y-8">
           {/* Logo */}
           <div className="text-center mb-8">
@@ -60,11 +68,42 @@ const LoginPage = () => {
             </div>
           </div>
 
+          {/* OAuth Buttons */}
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              className="btn btn-outline w-full flex items-center justify-center gap-2"
+            >
+              <img
+                src="https://www.svgrepo.com/show/475656/google-color.svg"
+                alt="Google"
+                className="w-5 h-5"
+              />
+              Continue with Google
+            </button>
+
+            <button
+              type="button"
+              onClick={handleGithubLogin}
+              className="btn btn-outline w-full flex items-center justify-center gap-2"
+            >
+              <img
+                src="https://www.svgrepo.com/show/512317/github-142.svg"
+                alt="GitHub"
+                className="w-5 h-5"
+              />
+              Continue with GitHub
+            </button>
+          </div>
+
+          <div className="divider">OR</div>
+
           {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            
-           
-          
+
+
+
 
             {/* Email */}
             <div className="form-control">
@@ -78,9 +117,8 @@ const LoginPage = () => {
                 <input
                   type="email"
                   {...register("email")}
-                  className={`input input-bordered w-full pl-10 ${
-                    errors.email ? "input-error" : ""
-                  }`}
+                  className={`input input-bordered w-full pl-10 ${errors.email ? "input-error" : ""
+                    }`}
                   placeholder="you@example.com"
                 />
               </div>
@@ -101,9 +139,8 @@ const LoginPage = () => {
                 <input
                   type={showPassword ? "text" : "password"}
                   {...register("password")}
-                  className={`input input-bordered w-full pl-10 ${
-                    errors.password ? "input-error" : ""
-                  }`}
+                  className={`input input-bordered w-full pl-10 ${errors.password ? "input-error" : ""
+                    }`}
                   placeholder="••••••••"
                 />
                 <button
@@ -129,7 +166,7 @@ const LoginPage = () => {
               className="btn btn-primary w-full"
               disabled={isLoggingIn}
             >
-               {isLoggingIn ? (
+              {isLoggingIn ? (
                 <>
                   <Loader2 className="h-5 w-5 animate-spin" />
                   Loading...
@@ -152,8 +189,8 @@ const LoginPage = () => {
         </div>
       </div>
 
-       {/* Right Side - Image/Pattern */}
-     {/* Right Side - Image/Pattern */}
+      {/* Right Side - Image/Pattern */}
+      {/* Right Side - Image/Pattern */}
       <AuthImagePattern
         title={"Welcome back!"}
         subtitle={
