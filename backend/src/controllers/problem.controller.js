@@ -2,6 +2,9 @@ import { db } from "../libs/db.js";
 import { getJudge0LanguageId, submitBatch, pollBatchResults } from "../libs/judge0.lib.js";
 
 export const createProblem = async (req, res) => {
+
+  console.log("Create problem hit");
+
   const {
     title,
     description,
@@ -13,6 +16,10 @@ export const createProblem = async (req, res) => {
     codeSnippets,
     referenceSolutions,
   } = req.body;
+
+  console.log("BODY:", req.body);
+  console.log("referenceSolutions:", referenceSolutions);
+  console.log("testcases:", testcases);
 
   if (!referenceSolutions || !testcases || testcases.length === 0) {
     return res.status(400).json({
@@ -47,7 +54,7 @@ export const createProblem = async (req, res) => {
 
       const submissionResults = await submitBatch(submissions);
 
-      const tokens = submissionResults.map((r) => r.token).filter(Boolean);
+      const tokens = submissionResults.map((r) => r?.token).filter(Boolean);
 
       if (tokens.length === 0) {
         return res.status(500).json({
@@ -186,7 +193,7 @@ export const updateProblemById = async (req, res) => {
     });
   }
 
-  // ✅ auth check
+  //auth check
   if (req.user.role !== "ADMIN") {
     return res.status(403).json({
       error: "Unauthorized: Only admins can update problems",
@@ -234,7 +241,7 @@ export const updateProblemById = async (req, res) => {
         }));
 
         const submissionResults = await submitBatch(submissions);
-        const tokens = submissionResults.map((r) => r.token).filter(Boolean);
+        const tokens = submissionResults.map((r) => r?.token).filter(Boolean);
 
         const results = await pollBatchResults(tokens);
 

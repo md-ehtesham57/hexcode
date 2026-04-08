@@ -3,7 +3,11 @@ import { db } from "../libs/db.js";
 
 export const authMiddleware = async (req, res, next) => {
   try {
-    console.log("AUTH HEADER:", req.headers.authorization);
+    // For debuggin
+    console.log(
+      `[${req.method}] ${req.url} | AUTH:`,
+      req.headers.authorization ? "Present" : "Missing"
+    );
     //Read from Authorization header
     const authHeader = req.headers.authorization;
 
@@ -19,12 +23,15 @@ export const authMiddleware = async (req, res, next) => {
 
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log("DECODED:", decoded);
     } catch (error) {
+      console.log("JWT ERROR:", error.message);
+
       return res.status(401).json({
-        message: "Unauthorized - Invalid or expired token"
+        message: "Unauthorized - " + error.message
       });
     }
-
+    console.log("LOOKING FOR USER ID:", decoded.id);
     //Fetch user
     const user = await db.user.findUnique({
       where: { id: decoded.id },
@@ -33,17 +40,20 @@ export const authMiddleware = async (req, res, next) => {
         name: true,
         email: true,
         role: true,
-        image: true
+        image: true,
+        isBanned: true
       }
     });
 
+    console.log("USER FOUND:", user);
+
     if (!user) {
       return res.status(404).json({
-        message: "User not found"
+        message: "Unauthorized - User not found"
       });
     }
 
-        if (user.isBanned) {
+    if (user.isBanned) {
       return res.status(403).json({
         error: "Account banned"
       });

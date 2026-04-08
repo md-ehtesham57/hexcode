@@ -51,23 +51,26 @@ export const pollBatchResults = async (tokens) => {
 };
 
 export const submitBatch = async (submissions) => {
-    let data;
+  try {
+    const response = await axios.post(
+      `${process.env.JUDGE0_API_URL}/submissions/batch?base64_encoded=false`,
+      { submissions }
+    );
 
-    try {
-        const response = await axios.post(
-            `${process.env.JUDGE0_API_URL}/submissions/batch?base64_encoded=false`,
-            { submissions }
-        );
-        data = response.data;
-    } catch (error) {
-        throw new Error("Failed to submit batch to Judge0");
+    const data = response.data;
+
+    console.log("Submission Results:", data);
+
+    if (!Array.isArray(data)) {
+      throw new Error("Invalid Judge0 response format");
     }
 
-    console.log("Submission Results: ", data);
-    if(!data.tokens || !Array.isArray(data.tokens)){
-        throw new Error("Invalid judge0 submission response.");
-    }
-    return data.tokens;
+    return data; // returns [{ token: ... }]
+    
+  } catch (error) {
+    console.error("Judge0 ERROR:", error.message);
+    throw new Error("Failed to submit batch to Judge0");
+  }
 };
 
 export function getLanguageName(languageId) {
