@@ -14,11 +14,16 @@ import ProblemPage from "./page/ProblemPage";
 import OAuthSuccess from "./page/oauth-success";
 
 const App = () => {
-  const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
+  const authUser = useAuthStore((state) => state.authUser);
+  const checkAuth = useAuthStore((state) => state.checkAuth);
+  const isCheckingAuth = useAuthStore((state) => state.isCheckingAuth);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if(!token) return;
+    
     checkAuth();
-  }, [checkAuth]);
+  }, []);
 
   if (isCheckingAuth && !authUser) {
     return (
