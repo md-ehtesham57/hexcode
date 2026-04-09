@@ -12,6 +12,7 @@ import AdminRoute from "./components/AdminRoute";
 import AddProblem from "./page/AddProblem";
 import ProblemPage from "./page/ProblemPage";
 import OAuthSuccess from "./page/oauth-success";
+import ProfilePage from "./page/ProfilePage";
 
 const App = () => {
   const authUser = useAuthStore((state) => state.authUser);
@@ -20,8 +21,8 @@ const App = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if(!token) return;
-    
+    if (!token) return;
+
     checkAuth();
   }, []);
 
@@ -63,6 +64,8 @@ const App = () => {
           <Route element={<AdminRoute />}>
             <Route path="/add-problem" element={<AddProblem />} />
           </Route>
+
+          <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />} />
 
         </Route>
         <Route path="/oauth-success" element={<OAuthSuccess />} />

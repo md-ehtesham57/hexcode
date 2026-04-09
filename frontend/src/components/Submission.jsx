@@ -1,26 +1,36 @@
 import { CheckCircle2, XCircle, Clock, MemoryStick as Memory } from 'lucide-react';
 
 const SubmissionResults = ({ submission }) => {
-  if(!submission){
-    return null; // guard
-  }
-  // Parse stringified arrays
-  const memoryArr = JSON.parse(submission?.memory || '[]');
-  const timeArr = JSON.parse(submission?.time || '[]');
+  if (!submission) return null;
 
-  // Calculate averages
-  const avgMemory = memoryArr
-    .map(m => parseFloat(m)) // remove ' KB' using parseFloat
-    .reduce((a, b) => a + b, 0) / memoryArr.length;
+  // Helper to ensure we have an array of numbers even if data is stringified
+  const ensureArray = (data) => {
+    if (Array.isArray(data)) return data;
+    try {
+      return JSON.parse(data || '[]');
+    } catch (e) {
+      return [];
+    }
+  };
 
-  const avgTime = timeArr
-    .map(t => parseFloat(t)) // remove ' s' using parseFloat
-    .reduce((a, b) => a + b, 0) / timeArr.length;
+  const memoryArr = ensureArray(submission?.memory);
+  const timeArr = ensureArray(submission?.time);
+
+  // Calculate averages safely with a fallback to 0 to avoid NaN
+  const avgMemory = memoryArr.length > 0
+    ? memoryArr.map(m => parseFloat(m)).reduce((a, b) => a + b, 0) / memoryArr.length
+    : 0;
+
+  const avgTime = timeArr.length > 0
+    ? timeArr.map(t => parseFloat(t)).reduce((a, b) => a + b, 0) / timeArr.length
+    : 0;
   console.log("submission:", submission);
   console.log("testCases:", submission?.testCases);
   console.log("isArray:", Array.isArray(submission?.testCases));
-  const testCases = Array.isArray(submission?.testCases)? submission.testCases : [];
-  const passedTests = testCases.filter(tc => tc.status?.id === "Accepted").length;
+  const testCases = submission?.results || submission?.testCases || [];
+  const passedTests = testCases.filter(tc =>
+    tc.passed === true || tc.status === 'Accepted'
+  ).length;
   const totalTests = testCases.length;
   const successRate = totalTests > 0 ? (passedTests / totalTests) * 100 : 0;
 
@@ -88,8 +98,8 @@ const SubmissionResults = ({ submission }) => {
                 </tr>
               </thead>
               <tbody>
-                {submission?.testCases?.map((testCase) => (
-                  <tr key={testCase.id}>
+                {submission?.testCases?.map((testCase, index) => (
+                  <tr key={testCase.testCase || index}>
                     <td>
                       {testCase.passed ? (
                         <div className="flex items-center gap-2 text-success">
@@ -104,7 +114,8 @@ const SubmissionResults = ({ submission }) => {
                       )}
                     </td>
                     <td className="font-mono">{testCase.expected}</td>
-                    <td className="font-mono">{testCase.stdout || 'null'}</td>
+                    {/* Use .trim() to ensure no hidden whitespace makes the UI look off */}
+                    <td className="font-mono">{testCase.stdout?.trim() || 'null'}</td>
                     <td>{testCase.memory}</td>
                     <td>{testCase.time}</td>
                   </tr>

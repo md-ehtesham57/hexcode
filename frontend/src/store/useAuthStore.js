@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
+import { useSubmissionStore } from "./useSubmissionStore";
 
 export const useAuthStore = create((set) => ({
   authUser: null,
@@ -59,6 +60,8 @@ export const useAuthStore = create((set) => ({
     try {
       await axiosInstance.post("/auth/logout");
       set({ authUser: null });
+
+      useSubmissionStore.getState().reset();
 
       toast.success("Logout successful");
     } catch (error) {

@@ -36,7 +36,10 @@ export const useSubmissionStore = create((set, get) => ({
         `/submission/get-submission/${problemId}`
       );
 
-      set({ submission: res.data.submission });
+      set({
+        submissions: res.data.submissions || [],
+        submission: res.data.submission || null
+      })
 
 
 
@@ -62,4 +65,6 @@ export const useSubmissionStore = create((set, get) => ({
       toast.error("Error getting submission count for problem");
     }
   },
+
+  reset: () => set({ submissions: [], submission: null, submissionCount: null })
 }));

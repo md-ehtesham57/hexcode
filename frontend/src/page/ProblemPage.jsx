@@ -51,25 +51,12 @@ const ProblemPage = () => {
   const { executeCode, executionResult, isExecuting } = useExecutionStore();
 
   const handleSubmit = async () => {
-    if (!executionResult) {
-      console.log("No execution result");
-      return;
-    }
-
     try {
-      const res = await axiosInstance.post("/submission/create", {
-        sourceCode: executionResult.sourceCode,
-        language: executionResult.language,
-        problemId: id,
-        // optionally include result/status
-        status: executionResult.status || "Accepted",
-      });
-
-      console.log("Submission saved:", res.data);
       await getSubmissionForProblem(id);
+
       setActiveTab("submissions");
     } catch (error) {
-      console.log("Error submitting solution", error);
+      console.log("Submit error:" , error);
     }
   };
 
@@ -96,7 +83,7 @@ const ProblemPage = () => {
     if (activeTab === "submissions" && id) {
       getSubmissionForProblem(id);
     }
-  }, [activeTab, id]);
+  }, [activeTab, id ]);
 
   console.log("submission", submissions);
 
@@ -190,6 +177,14 @@ const ProblemPage = () => {
           </div>
         );
       case "submissions":
+        // --- ADD THIS LOADING CHECK ---
+        if (isSubmissionsLoading) {
+          return (
+            <div className="flex justify-center p-10">
+              <span className="loading loading-spinner loading-md text-primary"></span>
+            </div>
+          );
+        }
         return (
           <SubmissionsList
             submissions={submissions}
@@ -283,20 +278,7 @@ const ProblemPage = () => {
             <div className="card-body p-0">
               <div className="tabs tabs-bordered">
                 <button
-                  className={`tab gap-2 ${activeTab === "submissions" && (
-                    <div className="mt-4">
-                      {submissions.length === 0 ? (
-                        <p>No submissions yet</p>
-                      ) : (
-                        submissions.map((sub) => (
-                          <div key={sub.id} className="border p-3 mb-2 rounded">
-                            <p><strong>Language:</strong> {sub.language}</p>
-                            <p><strong>Status:</strong> {sub.status}</p>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  )}`}
+                  className={`tab gap-2 ${activeTab === "description" ? "tab-active" : ""}`}
                   onClick={() => setActiveTab("description")}
                 >
                   <FileText className="w-4 h-4" />
