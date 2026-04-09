@@ -1,10 +1,12 @@
-import React from 'react';
 import { CheckCircle2, XCircle, Clock, MemoryStick as Memory } from 'lucide-react';
 
 const SubmissionResults = ({ submission }) => {
+  if(!submission){
+    return null; // guard
+  }
   // Parse stringified arrays
-  const memoryArr = JSON.parse(submission.memory || '[]');
-  const timeArr = JSON.parse(submission.time || '[]');
+  const memoryArr = JSON.parse(submission?.memory || '[]');
+  const timeArr = JSON.parse(submission?.time || '[]');
 
   // Calculate averages
   const avgMemory = memoryArr
@@ -14,10 +16,13 @@ const SubmissionResults = ({ submission }) => {
   const avgTime = timeArr
     .map(t => parseFloat(t)) // remove ' s' using parseFloat
     .reduce((a, b) => a + b, 0) / timeArr.length;
-
-  const passedTests = submission.testCases.filter(tc => tc.passed).length;
-  const totalTests = submission.testCases.length;
-  const successRate = (passedTests / totalTests) * 100;
+  console.log("submission:", submission);
+  console.log("testCases:", submission?.testCases);
+  console.log("isArray:", Array.isArray(submission?.testCases));
+  const testCases = Array.isArray(submission?.testCases)? submission.testCases : [];
+  const passedTests = testCases.filter(tc => tc.status?.id === "Accepted").length;
+  const totalTests = testCases.length;
+  const successRate = totalTests > 0 ? (passedTests / totalTests) * 100 : 0;
 
   return (
     <div className="space-y-6">
@@ -26,10 +31,9 @@ const SubmissionResults = ({ submission }) => {
         <div className="card bg-base-200 shadow-lg">
           <div className="card-body p-4">
             <h3 className="card-title text-sm">Status</h3>
-            <div className={`text-lg font-bold ${
-              submission.status === 'Accepted' ? 'text-success' : 'text-error'
-            }`}>
-              {submission.status}
+            <div className={`text-lg font-bold ${submission?.status === 'Accepted' ? 'text-success' : 'text-error'
+              }`}>
+              {submission?.status}
             </div>
           </div>
         </div>
@@ -84,7 +88,7 @@ const SubmissionResults = ({ submission }) => {
                 </tr>
               </thead>
               <tbody>
-                {submission.testCases.map((testCase) => (
+                {submission?.testCases?.map((testCase) => (
                   <tr key={testCase.id}>
                     <td>
                       {testCase.passed ? (

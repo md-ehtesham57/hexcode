@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
+import { axiosInstance } from "../lib/axios";
 import {
   Play,
   FileText,
@@ -29,12 +30,17 @@ const ProblemPage = () => {
   const { getProblemById, problem, isProblemLoading } = useProblemStore();
 
   const {
-    submission: submissions,
+    submission,
+    submissions,
     isLoading: isSubmissionsLoading,
     getSubmissionForProblem,
     getSubmissionCountForProblem,
     submissionCount,
   } = useSubmissionStore();
+
+  //console.log("problemSubmission:" , problemSubmission);
+  console.log("submission", submissions)
+  console.log("submissions (array):", submissions);
 
   const [code, setCode] = useState("");
   const [activeTab, setActiveTab] = useState("description");
@@ -42,7 +48,30 @@ const ProblemPage = () => {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [testcases, setTestCases] = useState([]);
 
-  const { executeCode, submission, isExecuting } = useExecutionStore();
+  const { executeCode, executionResult, isExecuting } = useExecutionStore();
+
+  const handleSubmit = async () => {
+    if (!executionResult) {
+      console.log("No execution result");
+      return;
+    }
+
+    try {
+      const res = await axiosInstance.post("/submission/create", {
+        sourceCode: executionResult.sourceCode,
+        language: executionResult.language,
+        problemId: id,
+        // optionally include result/status
+        status: executionResult.status || "Accepted",
+      });
+
+      console.log("Submission saved:", res.data);
+      await getSubmissionForProblem(id);
+      setActiveTab("submissions");
+    } catch (error) {
+      console.log("Error submitting solution", error);
+    }
+  };
 
   useEffect(() => {
     getProblemById(id);
@@ -81,8 +110,8 @@ const ProblemPage = () => {
     e.preventDefault();
     try {
       const language_id = getLanguageId(selectedLanguage);
-      const stdin = problem.testcases.map((tc) => tc.input);
-      const expected_outputs = problem.testcases.map((tc) => tc.output);
+      const stdin = problem?.testcases?.map((tc) => tc.input);
+      const expected_outputs = problem?.testcases?.map((tc) => tc.output);
       executeCode(code, language_id, stdin, expected_outputs, id);
     } catch (error) {
       console.log("Error executing code", error);
@@ -225,9 +254,8 @@ const ProblemPage = () => {
         </div>
         <div className="flex-none gap-4">
           <button
-            className={`btn btn-ghost btn-circle ${
-              isBookmarked ? "text-primary" : ""
-            }`}
+            className={`btn btn-ghost btn-circle ${isBookmarked ? "text-primary" : ""
+              }`}
             onClick={() => setIsBookmarked(!isBookmarked)}
           >
             <Bookmark className="w-5 h-5" />
@@ -255,36 +283,44 @@ const ProblemPage = () => {
             <div className="card-body p-0">
               <div className="tabs tabs-bordered">
                 <button
-                  className={`tab gap-2 ${
-                    activeTab === "description" ? "tab-active" : ""
-                  }`}
+                  className={`tab gap-2 ${activeTab === "submissions" && (
+                    <div className="mt-4">
+                      {submissions.length === 0 ? (
+                        <p>No submissions yet</p>
+                      ) : (
+                        submissions.map((sub) => (
+                          <div key={sub.id} className="border p-3 mb-2 rounded">
+                            <p><strong>Language:</strong> {sub.language}</p>
+                            <p><strong>Status:</strong> {sub.status}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}`}
                   onClick={() => setActiveTab("description")}
                 >
                   <FileText className="w-4 h-4" />
                   Description
                 </button>
                 <button
-                  className={`tab gap-2 ${
-                    activeTab === "submissions" ? "tab-active" : ""
-                  }`}
+                  className={`tab gap-2 ${activeTab === "submissions" ? "tab-active" : ""
+                    }`}
                   onClick={() => setActiveTab("submissions")}
                 >
                   <Code2 className="w-4 h-4" />
                   Submissions
                 </button>
                 <button
-                  className={`tab gap-2 ${
-                    activeTab === "discussion" ? "tab-active" : ""
-                  }`}
+                  className={`tab gap-2 ${activeTab === "discussion" ? "tab-active" : ""
+                    }`}
                   onClick={() => setActiveTab("discussion")}
                 >
                   <MessageSquare className="w-4 h-4" />
                   Discussion
                 </button>
                 <button
-                  className={`tab gap-2 ${
-                    activeTab === "hints" ? "tab-active" : ""
-                  }`}
+                  className={`tab gap-2 ${activeTab === "hints" ? "tab-active" : ""
+                    }`}
                   onClick={() => setActiveTab("hints")}
                 >
                   <Lightbulb className="w-4 h-4" />
@@ -327,16 +363,15 @@ const ProblemPage = () => {
               <div className="p-4 border-t border-base-300 bg-base-200">
                 <div className="flex justify-between items-center">
                   <button
-                    className={`btn btn-primary gap-2 ${
-                      isExecuting ? "loading" : ""
-                    }`}
+                    className={`btn btn-primary gap-2 ${isExecuting ? "loading" : ""
+                      }`}
                     onClick={handleRunCode}
                     disabled={isExecuting}
                   >
                     {!isExecuting && <Play className="w-4 h-4" />}
                     Run Code
                   </button>
-                  <button className="btn btn-success gap-2">
+                  <button onClick={handleSubmit} className="btn btn-success gap-2">
                     Submit Solution
                   </button>
                 </div>
@@ -347,8 +382,8 @@ const ProblemPage = () => {
 
         <div className="card bg-base-100 shadow-xl mt-6">
           <div className="card-body">
-            {submission ? (
-              <Submission submission={submission} />
+            {executionResult ? (
+              <Submission submission={executionResult} />
             ) : (
               <>
                 <div className="flex items-center justify-between mb-6">

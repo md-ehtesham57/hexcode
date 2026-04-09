@@ -1,5 +1,42 @@
 import { db } from "../libs/db.js";
 
+export const createSubmission = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const { sourceCode, language, problemId, status } = req.body;
+
+    if (!sourceCode || !language || !problemId) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields",
+      });
+    }
+
+    const submission = await db.submission.create({
+      data: {
+        userId,
+        problemId,
+        sourceCode,
+        language,
+        status,
+      },
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Submission created successfully",
+      submission,
+    });
+  } catch (error) {
+    console.error("Create Submission Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to create submission",
+    });
+  }
+};
+
 export const getAllSubmission = async(req , res)=>{
     try {
         const userId = req.user.id;

@@ -139,18 +139,16 @@ export const getAllProblems = async (req, res) => {
 export const getProblemById = async (req, res) => {
   const { id } = req.params;
 
-  const problemId = Number(id);
-
-  if (isNaN(problemId)) {
-    return res.status(400).json({
-      error: "Invalid problem ID",
-    });
-  }
+if (!id) {
+  return res.status(400).json({
+    error: "Problem ID is required",
+  });
+}
 
   try {
     const problem = await db.problem.findUnique({
       where: {
-        id: problemId,
+        id,
       },
       select: {
         id: true,
@@ -160,6 +158,10 @@ export const getProblemById = async (req, res) => {
         examples: true,
         constraints: true,
         tags: true,
+
+        testcases: true,
+        codeSnippets: true,
+        referenceSolutions: true,
       },
     });
 
@@ -172,12 +174,12 @@ export const getProblemById = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Problem fetched by id successfully.",
-      problem
+      problem,
     })
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Error while fetching problems by id!"
+      error: "Error while fetching problem!"
     });
   }
 }
