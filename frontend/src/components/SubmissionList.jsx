@@ -7,8 +7,10 @@ import {
 } from "lucide-react";
 
 const SubmissionsList = ({ submissions, isLoading }) => {
-  // Helper function to safely parse JSON strings
+  // 🛡️ Enhanced Helper: Safely parse JSON strings
   const safeParse = (data) => {
+    if (!data) return []; // Guard against null/undefined
+    if (Array.isArray(data)) return data; // Already an array
     try {
       return JSON.parse(data);
     } catch (error) {
@@ -17,24 +19,38 @@ const SubmissionsList = ({ submissions, isLoading }) => {
     }
   };
 
-  // Helper function to calculate average memory usage
+  // 🛡️ Enhanced Helper: Calculate average memory usage
   const calculateAverageMemory = (memoryData) => {
-    const memoryArray = safeParse(memoryData).map((m) =>
-      parseFloat(m.split(" ")[0])
-    );
-    if (memoryArray.length === 0) return 0;
-    return (
-      memoryArray.reduce((acc, curr) => acc + curr, 0) / memoryArray.length
-    );
+    const parsed = safeParse(memoryData);
+    if (!parsed || parsed.length === 0) return 0;
+
+    const memoryArray = parsed
+      .map((m) => {
+        if (typeof m !== "string") return 0; // Guard against non-string elements
+        return parseFloat(m.split(" ")[0]);
+      })
+      .filter((num) => !isNaN(num)); // Remove any NaNs
+
+    return memoryArray.length === 0
+      ? 0
+      : memoryArray.reduce((acc, curr) => acc + curr, 0) / memoryArray.length;
   };
 
-  // Helper function to calculate average runtime
+  // 🛡️ Enhanced Helper: Calculate average runtime
   const calculateAverageTime = (timeData) => {
-    const timeArray = safeParse(timeData).map((t) =>
-      parseFloat(t.split(" ")[0])
-    );
-    if (timeArray.length === 0) return 0;
-    return timeArray.reduce((acc, curr) => acc + curr, 0) / timeArray.length;
+    const parsed = safeParse(timeData);
+    if (!parsed || parsed.length === 0) return 0;
+
+    const timeArray = parsed
+      .map((t) => {
+        if (typeof t !== "string") return 0;
+        return parseFloat(t.split(" ")[0]);
+      })
+      .filter((num) => !isNaN(num));
+
+    return timeArray.length === 0
+      ? 0
+      : timeArray.reduce((acc, curr) => acc + curr, 0) / timeArray.length;
   };
 
   // Loading state
@@ -47,10 +63,10 @@ const SubmissionsList = ({ submissions, isLoading }) => {
   }
 
   // No submissions state
-  if (!submissions?.length) {
+  if (!submissions || submissions.length === 0) {
     return (
-      <div className="text-center p-8">
-        <div className="text-base-content/70">No submissions yet</div>
+      <div className="text-center p-8 border-2 border-dashed border-base-content/10 rounded-xl">
+        <div className="text-base-content/50 italic">No submissions yet</div>
       </div>
     );
   }
@@ -58,46 +74,54 @@ const SubmissionsList = ({ submissions, isLoading }) => {
   return (
     <div className="space-y-4">
       {submissions.map((submission) => {
+        // These are now guarded and won't crash the app
         const avgMemory = calculateAverageMemory(submission.memory);
         const avgTime = calculateAverageTime(submission.time);
 
         return (
           <div
             key={submission.id}
-            className="card bg-base-200 shadow-lg hover:shadow-xl transition-shadow rounded-lg"
+            className="card bg-base-200/50 shadow-md hover:shadow-lg transition-all rounded-xl border border-base-content/5"
           >
             <div className="card-body p-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 {/* Left Section: Status and Language */}
                 <div className="flex items-center gap-4">
                   {submission.status === "Accepted" ? (
                     <div className="flex items-center gap-2 text-success">
-                      <CheckCircle2 className="w-6 h-6" />
-                      <span className="font-semibold">Accepted</span>
+                      <CheckCircle2 className="w-5 h-5" />
+                      <span className="font-bold tracking-tight">Accepted</span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 text-error">
-                      <XCircle className="w-6 h-6" />
-                      <span className="font-semibold">{submission.status}</span>
+                      <XCircle className="w-5 h-5" />
+                      <span className="font-bold tracking-tight">
+                        {submission.status || "Error"}
+                      </span>
                     </div>
                   )}
-                  <div className="badge badge-neutral">{submission.language}</div>
+                  <div className="badge badge-neutral font-mono text-xs uppercase">
+                    {submission.language}
+                  </div>
                 </div>
 
                 {/* Right Section: Runtime, Memory, and Date */}
-                <div className="flex items-center gap-4 text-base-content/70">
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
+                <div className="flex items-center flex-wrap gap-4 text-xs font-medium opacity-70">
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-primary" />
                     <span>{avgTime.toFixed(3)} s</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Memory className="w-4 h-4" />
+                  <div className="flex items-center gap-1.5">
+                    <Memory className="w-3.5 h-3.5 text-secondary" />
                     <span>{avgMemory.toFixed(0)} KB</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
+                  <div className="flex items-center gap-1.5 border-l border-base-content/10 pl-4">
+                    <Calendar className="w-3.5 h-3.5" />
                     <span>
-                      {new Date(submission.createdAt).toLocaleDateString()}
+                      {new Date(submission.createdAt).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                      })}
                     </span>
                   </div>
                 </div>
