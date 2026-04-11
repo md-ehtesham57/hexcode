@@ -12,7 +12,7 @@ import AdminRoute from "./components/AdminRoute";
 import AddProblem from "./page/AddProblem";
 import ProblemPage from "./page/ProblemPage";
 import OAuthSuccess from "./page/oauth-success";
-import ProfilePage from "./page/ProfilePage";
+import Dashboard from "./page/Dashboard";
 
 const App = () => {
   const authUser = useAuthStore((state) => state.authUser);
@@ -65,7 +65,7 @@ const App = () => {
             <Route path="/add-problem" element={<AddProblem />} />
           </Route>
 
-          <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />} />
+          <Route path="/dashboard" element={authUser ? <Dashboard /> : <Navigate to="/login" />} />
 
         </Route>
         <Route path="/oauth-success" element={<OAuthSuccess />} />

@@ -4,19 +4,19 @@ import { useAuthStore } from "../store/useAuthStore";
 import { useSubmissionStore } from "../store/useSubmissionStore";
 import { Trophy, Target, Zap, Activity, Loader } from "lucide-react";
 
-const ProfilePage = () => {
+const Dashboard = () => {
     const { authUser } = useAuthStore();
-    // ✅ Make sure 'isFetching' or 'loading' is pulled from your store
+    //Make sure 'isFetching' or 'loading' is pulled from your store
     const { submissions, getAllSubmissions, isFetching } = useSubmissionStore(); 
 
     useEffect(() => {
-        // 🔥 The Guard: Only fetch if we have a user and data is missing
+        //The Guard: Only fetch if we have a user and data is missing
         if (authUser && submissions.length === 0) {
             getAllSubmissions();
         }
     }, [authUser, getAllSubmissions, submissions.length]);
 
-    // 🚦 Safety Check: If data is still loading, show a spinner instead of broken cards
+    //Safety Check: If data is still loading, show a spinner instead of broken cards
     if (isFetching && submissions.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
@@ -143,4 +143,4 @@ const ProfilePage = () => {
     );
 };
 
-export default ProfilePage;
+export default Dashboard;

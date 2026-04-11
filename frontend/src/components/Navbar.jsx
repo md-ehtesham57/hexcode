@@ -1,16 +1,10 @@
-import React from "react"
-import { User, Code, LogOut } from "lucide-react";
+import { User, Code, LogOut, LayoutDashboard } from "lucide-react"; // Added LayoutDashboard
 import { useAuthStore } from "../store/useAuthStore";
 import { Link } from "react-router-dom";
 import LogoutButton from "./LogoutButton";
 
-
-
 const Navbar = () => {
-
   const { authUser } = useAuthStore()
-
-  console.log("AUTH_USER", authUser)
 
   return (
     <nav className="sticky top-0 z-50 w-full py-5">
@@ -26,57 +20,64 @@ const Navbar = () => {
         {/* User Profile and Dropdown */}
         <div className="flex items-center gap-8">
           <div className="dropdown dropdown-end">
-            <label tabIndex={0} className="btn btn-ghost btn-circle avatar flex flex-row ">
-              <div className="w-10 rounded-full ">
+            <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
+              <div className="w-10 rounded-full border border-primary/20">
                 <img
-                  src={
-                    authUser?.image ||
-                    "https://avatar.iran.liara.run/public/boy"
-                  }
+                  src={authUser?.image || "https://ui-avatars.com/api/?name=" + authUser?.name} 
                   alt="User Avatar"
                   className="object-cover"
+                  onError={(e) => { e.target.src = "https://ui-avatars.com/api/?name=" + authUser?.name; }} 
                 />
               </div>
-
             </label>
             <ul
               tabIndex={0}
-              className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52 space-y-3"
+              className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52 space-y-2"
             >
-              {/* Admin Option */}
-
-
-              {/* Common Options */}
               <li>
-                <p className="text-base font-semibold">
-
-                  {authUser?.name}
-
-                </p>
-                <hr className="border-gray-200/10" />
+                <div className="flex flex-col items-start px-4 py-2">
+                  <span className="text-sm font-bold text-primary">{authUser?.name}</span>
+                  <span className="text-[10px] opacity-50 truncate w-full">{authUser?.email}</span>
+                </div>
+                <hr className="border-base-content/10 my-1" />
               </li>
+
+              {/* NEW DASHBOARD LINK (The Stats Page) */}
+              <li>
+                <Link
+                  to="/dashboard"
+                  className="hover:bg-primary hover:text-white text-sm font-semibold py-2"
+                >
+                  <LayoutDashboard className="w-4 h-4 mr-2" />
+                  Dashboard
+                </Link>
+              </li>
+
+              {/* UPDATED PROFILE LINK (The Settings Page) */}
               <li>
                 <Link
                   to="/profile"
-                  className="hover:bg-primary hover:text-white text-base font-semibold"
+                  className="hover:bg-primary hover:text-white text-sm font-semibold py-2"
                 >
                   <User className="w-4 h-4 mr-2" />
-                  My Profile
+                  Account Settings
                 </Link>
               </li>
+
               {authUser?.role === "ADMIN" && (
                 <li>
                   <Link
                     to="/add-problem"
-                    className="hover:bg-primary hover:text-white text-base font-semibold"
+                    className="hover:bg-primary hover:text-white text-sm font-semibold py-2"
                   >
-                    <Code className="w-4 h-4 mr-1" />
+                    <Code className="w-4 h-4 mr-2" />
                     Add Problem
                   </Link>
                 </li>
               )}
+
               <li>
-                <LogoutButton className="hover:bg-primary hover:text-white">
+                <LogoutButton className="hover:bg-error hover:text-white text-sm font-semibold py-2 mt-2">
                   <LogOut className="w-4 h-4 mr-2" />
                   Logout
                 </LogoutButton>
@@ -88,6 +89,5 @@ const Navbar = () => {
     </nav>
   )
 }
-
 
 export default Navbar;
