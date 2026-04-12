@@ -3,6 +3,7 @@ import { login, logout, register, check, refresh } from "../controllers/auth.con
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { authLimiter } from "../middleware/auth.rateLimit.js";
 import passport from "../config/passport.js";
+import { updateProfile , changePassword } from "../controllers/auth.controller.js";
 //temp route
 import { db } from "../libs/db.js";
 
@@ -12,6 +13,10 @@ const authRoutes = express.Router();
 authRoutes.post("/register", authLimiter, register);
 
 authRoutes.post("/login", authLimiter, login);
+
+authRoutes.put("/update-profile", authMiddleware, updateProfile);
+
+authRoutes.put("/change-password" , authMiddleware, changePassword);
 
 //Google OAuth Login
 authRoutes.get(

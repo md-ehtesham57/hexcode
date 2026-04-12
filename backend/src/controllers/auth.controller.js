@@ -91,7 +91,9 @@ export const register = async (req, res) => {
         email: newUser.email,
         name: newUser.name,
         role: newUser.role,
-        image: newUser.image
+        image: newUser.image,
+        github: newUser.github,
+        website: newUser.website,
       }
     })
   } catch (error) {
@@ -194,7 +196,9 @@ export const login = async (req, res) => {
         email: user.email,
         name: user.name,
         role: user.role,
-        image: user.image
+        image: user.image,
+        github: user.github,
+        website: user.website,
       }
     });
 
@@ -203,6 +207,34 @@ export const login = async (req, res) => {
     res.status(500).json({
       error: "Error login the user"
     });
+  }
+};
+
+import { PrismaClient } from "@prisma/client";
+import { success } from "zod";
+const prisma = new PrismaClient();
+
+export const updateProfile = async (req, res) => {
+  try {
+    const { github, website, profilePic } = req.body;
+    const userId = req.user.id;
+
+    const updatedUser = await db.user.update({
+      where: { id: userId },
+      data: {
+        github: github || "",
+        website: website || "",
+        image: profilePic,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      user: updatedUser,
+    })
+  } catch (error) {
+    console.error("Prisma Update Error:", error);
+    res.status(500).json({ error: "Failed to update profile" });
   }
 };
 
@@ -244,10 +276,24 @@ export const logout = async (req, res) => {
 
 export const check = async (req, res) => {
   try {
+    const user = await db.user.findUnique({
+      where: { id: req.user.id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        image: true,
+        github: true,   
+        website: true, 
+        createdAt: true,
+      }
+    });
+
     res.status(200).json({
       success: true,
       message: "User authenticated successfully",
-      user: req.user
+      user: user
     })
   } catch (error) {
     console.error("Error checking user: ", error);
@@ -358,6 +404,30 @@ export const refresh = async (req, res) => {
     res.status(500).json({
       error: "Failed to refresh token"
     });
+  }
+};
+
+export const changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const userId = req.user.id;
+
+    const user = await db.user.findUnique({ where: { id: userId } });
+
+    // 1. Verify old password
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) return res.status(400).json({ error: "Current password incorrect" });
+
+    // 2. Hash and save new password
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    await db.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+
+    res.status(200).json({ success: true, message: "Password updated!" });
+  } catch (error) {
+    res.status(500).json({ error: "Server error updating password" });
   }
 };
 

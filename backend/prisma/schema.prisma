@@ -28,6 +28,8 @@ model User {
   role      UserRole  @default(USER)
   password  String?
   isBanned  Boolean   @default(false)
+  github    String?
+  website   String?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   problems  Problem[]
@@ -156,3 +158,4 @@ model Session {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+

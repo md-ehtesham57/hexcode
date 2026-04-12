@@ -69,4 +69,42 @@ export const useAuthStore = create((set) => ({
       toast.error("Error logging out");
     }
   },
+
+  updateProfile: async (data) => {
+    set({ isUpdatingProfile: true });
+    try {
+      const res = await axiosInstance.put("/auth/update-profile", data);
+
+      const updatedUser = res.data.user || res.data;
+
+      set({ authUser: updatedUser });
+      toast.success("Profile updated successfully");
+    } catch (error) {
+      toast.error(error.response?.data?.error || "Update failed");
+    } finally {
+      set({ isUpdatingProfile: false });
+    }
+  },
+
+  changePassword: async (data) => {
+    try {
+      await axiosInstance.put("/auth/change-password", data);
+      toast.success("Password changed successfully!");
+      return true;
+    } catch (error) {
+      toast.error(error.response?.data?.error || "Failed to change password");
+      return false;
+    }
+  },
+
+  deleteAccount: async () => {
+    if (!window.confirm("Are you sure? This cannot be undone.")) return;
+    try {
+      await axiosInstance.delete("/auth/delete-account");
+      set({ authUser: null });
+      toast.success("Account deleted");
+    } catch (error) {
+      toast.error("Failed to delete account");
+    }
+  }
 }));
