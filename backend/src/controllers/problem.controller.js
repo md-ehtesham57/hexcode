@@ -291,14 +291,6 @@ export const updateProblemById = async (req, res) => {
 export const deleteProblem = async (req, res) => {
   const { id } = req.params;
 
-  const problemId = Number(id);
-
-  if (isNaN(problemId)) {
-    return res.status(400).json({
-      error: "Invalid problem ID",
-    });
-  }
-
   if (req.user.role !== "ADMIN") {
     return res.status(403).json({
       error: "Unauthorized: Only admins can delete problems",
@@ -307,7 +299,9 @@ export const deleteProblem = async (req, res) => {
 
   try {
     await db.problem.delete({
-      where: { id: problemId }
+      where: { 
+        id: id
+      }
     });
 
     return res.status(200).json({
@@ -316,16 +310,17 @@ export const deleteProblem = async (req, res) => {
     });
 
   } catch (error) {
-    console.log(error);
+    console.error("Prisma Error:", error);
 
+    //Handle Prisma "Record Not Found" Error
     if (error.code === "P2025") {
       return res.status(404).json({
-        error: "Problem not found",
+        error: "Problem not found in database",
       });
     }
 
     return res.status(500).json({
-      error: "Error while deleting the problem!"
+      error: "Internal server error during deletion"
     });
   }
 };

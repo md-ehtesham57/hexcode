@@ -4,6 +4,7 @@ import { useAuthStore } from "../store/useAuthStore";
 import { Link } from "react-router-dom";
 import LogoutButton from "./LogoutButton";
 import AvatarPlaceholder from "./AvatarPlaceholder";
+import HexcodeLogo from "./HexcodeLogo";
 
 const Navbar = () => {
   const { authUser } = useAuthStore();
@@ -13,9 +14,10 @@ const Navbar = () => {
     <nav className="sticky top-0 z-50 w-full py-5">
       <div className="flex w-full justify-between mx-auto max-w-4xl bg-black/15 shadow-lg shadow-neutral-600/5 backdrop-blur-lg border border-gray-200/10 p-4 rounded-2xl">
         {/* Logo Section */}
-        <Link to="/" className="flex items-center gap-3 cursor-pointer">
-          <img src="/hexcode.svg" className="h-18 w-18 bg-primary/20 text-primary border-none px-2 py-2 rounded-full" />
-          <span className="text-lg md:text-2xl font-bold tracking-tight text-white hidden md:block">
+        <Link to="/" className="flex items-center gap-2 group">
+          <HexcodeLogo className="w-9 h-9 transition-transform duration-300 group-hover:rotate-6" color="#a855f7" />
+
+          <span className="text-xl font-light tracking-[0.4em] text-base-content/90 uppercase font-sans ml-2">
             Hexcode
           </span>
         </Link>
@@ -37,7 +39,7 @@ const Navbar = () => {
                 )}
               </div>
             </label>
-            
+
             <ul
               tabIndex={0}
               className="menu menu-sm dropdown-content mt-3 z-[1] p-3 shadow-2xl bg-base-100 rounded-box w-60 space-y-1 border border-base-content/5"
