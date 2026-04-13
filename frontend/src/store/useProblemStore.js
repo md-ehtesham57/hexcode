@@ -8,6 +8,7 @@ export const useProblemStore = create((set) => ({
   solvedProblems: [],
   isProblemsLoading: false,
   isProblemLoading: false,
+  isDeletingProblem: false,
 
   getAllProblems: async () => {
     try {
