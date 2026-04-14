@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { User, Code, LogOut, LayoutDashboard } from "lucide-react";
+import { User, Code, LogOut, LayoutDashboard, Library } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { Link } from "react-router-dom";
 import LogoutButton from "./LogoutButton";
@@ -63,6 +63,13 @@ const Navbar = () => {
                 <Link to="/dashboard" className="flex items-center gap-3 py-3 px-4 hover:bg-primary hover:text-white rounded-xl transition-all duration-200 font-semibold">
                   <LayoutDashboard className="w-4 h-4" />
                   Dashboard
+                </Link>
+              </li>
+
+              <li>
+                <Link to="/playlists" className="flex items-center gap-3 py-3 px-4 hover:bg-primary hover:text-white rounded-xl transition-all duration-200 font-semibold">
+                  <Library className="w-4 h-4" />
+                  My Playlists
                 </Link>
               </li>
 

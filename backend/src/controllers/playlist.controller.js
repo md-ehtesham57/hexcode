@@ -97,7 +97,7 @@ export const addProblemToPlaylist = async (req, res) => {
     // Create records for each problem in the playlist
     const problemsInPlaylist = await db.problemInPlaylist.createMany({
       data: problemIds.map((problemId) => ({
-        playListId: playlistId, // ✅ match your Prisma field name exactly
+        playListId: playlistId,
         problemId,
       })),
     });
