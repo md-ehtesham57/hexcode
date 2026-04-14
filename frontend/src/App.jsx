@@ -15,6 +15,7 @@ import OAuthSuccess from "./page/oauth-success";
 import Dashboard from "./page/Dashboard";
 import ProfilePage from "./page/ProfilePage";
 import PlaylistsPage from "./page/PlaylistsPage";
+import PlaylistDetailsPage from "./page/PlaylistDetailsPage";
 
 const App = () => {
   const authUser = useAuthStore((state) => state.authUser);
@@ -68,6 +69,8 @@ const App = () => {
           </Route>
 
           <Route path="/playlists" element={authUser ? <PlaylistsPage /> : <Navigate to="/login" />} />
+
+          <Route path="/playlists/:id" element={<PlaylistDetailsPage />} />
 
           <Route path="/dashboard" element={authUser ? <Dashboard /> : <Navigate to="/login" />} />
 
