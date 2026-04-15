@@ -43,6 +43,7 @@ const ProblemPage = () => {
   console.log("submissions (array):", submissions);
 
   const [code, setCode] = useState("");
+  const [fontSize, setFontSize] = useState(18);
   const [activeTab, setActiveTab] = useState("description");
   const [selectedLanguage, setSelectedLanguage] = useState("javascript");
   const [isBookmarked, setIsBookmarked] = useState(false);
@@ -59,6 +60,9 @@ const ProblemPage = () => {
       console.log("Submit error:", error);
     }
   };
+
+  const handleZoomIn = () => setFontSize((prev) => Math.min(prev + 2, 40));
+  const handleZoomOut = () => setFontSize((prev) => Math.max(prev - 2, 10));
 
   useEffect(() => {
     if (!id) return;
@@ -371,6 +375,27 @@ const ProblemPage = () => {
                 </button>
               </div>
 
+              {/* Right Side: Zoom Controls */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs opacity-50 font-mono">{fontSize}px</span>
+                <div className="join border border-base-300 rounded-lg overflow-hidden">
+                  <button
+                    onClick={handleZoomOut}
+                    className="btn btn-ghost btn-xs join-item hover:bg-base-300"
+                    title="Zoom Out"
+                  >
+                    −
+                  </button>
+                  <button
+                    onClick={handleZoomIn}
+                    className="btn btn-ghost btn-xs join-item hover:bg-base-300"
+                    title="Zoom In"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
               <div className="h-[600px] w-full">
                 <Editor
                   height="100%"
@@ -380,12 +405,11 @@ const ProblemPage = () => {
                   onChange={(value) => setCode(value || "")}
                   options={{
                     minimap: { enabled: false },
-                    fontSize: 20,
+                    fontSize: fontSize,
+                    mouseWheelZoom: true,
                     lineNumbers: "on",
-                    roundedSelection: false,
-                    scrollBeyondLastLine: false,
-                    readOnly: false,
                     automaticLayout: true,
+                    scrollBeyondLastLine: false,
                   }}
                 />
               </div>
