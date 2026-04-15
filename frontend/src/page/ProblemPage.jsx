@@ -326,123 +326,94 @@ const ProblemPage = () => {
 
       <div className="container mx-auto p-4">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="card bg-base-100 shadow-xl">
+
+          {/* LEFT SIDE: Problem Info */}
+          <div className="card bg-base-100 shadow-xl overflow-hidden h-fit">
             <div className="card-body p-0">
-              <div className="tabs tabs-bordered">
-                <button
-                  className={`tab gap-2 ${activeTab === "description" ? "tab-active" : ""}`}
-                  onClick={() => setActiveTab("description")}
-                >
-                  <FileText className="w-4 h-4" />
-                  Description
+              <div className="tabs tabs-bordered bg-base-200/30">
+                <button className={`tab gap-2 ${activeTab === "description" ? "tab-active" : ""}`} onClick={() => setActiveTab("description")}>
+                  <FileText className="w-4 h-4" /> Description
                 </button>
-                <button
-                  className={`tab gap-2 ${activeTab === "submissions" ? "tab-active" : ""
-                    }`}
-                  onClick={() => setActiveTab("submissions")}
-                >
-                  <Code2 className="w-4 h-4" />
-                  Submissions
+                <button className={`tab gap-2 ${activeTab === "submissions" ? "tab-active" : ""}`} onClick={() => setActiveTab("submissions")}>
+                  <Code2 className="w-4 h-4" /> Submissions
                 </button>
-                <button
-                  className={`tab gap-2 ${activeTab === "discussion" ? "tab-active" : ""
-                    }`}
-                  onClick={() => setActiveTab("discussion")}
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  Discussion
+                <button className={`tab gap-2 ${activeTab === "discussion" ? "tab-active" : ""}`} onClick={() => setActiveTab("discussion")}>
+                  <MessageSquare className="w-4 h-4" /> Discussion
                 </button>
-                <button
-                  className={`tab gap-2 ${activeTab === "hints" ? "tab-active" : ""
-                    }`}
-                  onClick={() => setActiveTab("hints")}
-                >
-                  <Lightbulb className="w-4 h-4" />
-                  Hints
+                <button className={`tab gap-2 ${activeTab === "hints" ? "tab-active" : ""}`} onClick={() => setActiveTab("hints")}>
+                  <Lightbulb className="w-4 h-4" /> Hints
                 </button>
               </div>
-
               <div className="p-6">{renderTabContent()}</div>
             </div>
           </div>
 
-          <div className="card bg-base-100 shadow-xl">
-            <div className="card-body p-0">
-              <div className="tabs tabs-bordered">
-                <button className="tab tab-active gap-2">
-                  <Terminal className="w-4 h-4" />
-                  Code Editor
+          {/* RIGHT SIDE: Editor Area */}
+          <div className="card bg-base-100 shadow-xl overflow-hidden flex flex-col h-fit">
+            {/* --- HEADER --- */}
+            <div className="flex items-center justify-between px-4 py-2 bg-base-200/50 border-b border-base-300">
+              <div className="flex items-center gap-2 text-sm font-bold opacity-80">
+                <Terminal className="w-4 h-4 text-primary" />
+                <span>Code Editor</span>
+              </div>
+
+              {/* Zoom Controls */}
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] uppercase font-mono font-bold opacity-40">Size: {fontSize}px</span>
+                <div className="join bg-base-100 border border-base-300 rounded-md">
+                  <button onClick={handleZoomOut} className="btn btn-ghost btn-xs join-item h-7 w-8">−</button>
+                  <button onClick={handleZoomIn} className="btn btn-ghost btn-xs join-item h-7 w-8">+</button>
+                </div>
+              </div>
+            </div>
+
+            {/* --- ACTUAL EDITOR --- */}
+            <div className="h-[500px] w-full bg-[#1e1e1e]">
+              <Editor
+                height="100%"
+                language={selectedLanguage.toLowerCase()}
+                theme="vs-dark"
+                value={code}
+                onChange={(value) => setCode(value || "")}
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: fontSize,
+                  mouseWheelZoom: true,
+                  lineNumbers: "on",
+                  automaticLayout: true,
+                  scrollBeyondLastLine: false,
+                  padding: { top: 10 },
+                }}
+              />
+            </div>
+
+            {/* --- FOOTER BUTTONS (Outside the Editor height) --- */}
+            <div className="p-4 border-t border-base-300 bg-base-200">
+              <div className="flex justify-between items-center">
+                <button
+                  className={`btn btn-primary btn-sm md:btn-md gap-2 ${isExecuting ? "loading" : ""}`}
+                  onClick={handleRunCode}
+                  disabled={isExecuting}
+                >
+                  {!isExecuting && <Play className="w-4 h-4" />}
+                  Run Code
                 </button>
-              </div>
-
-              {/* Right Side: Zoom Controls */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs opacity-50 font-mono">{fontSize}px</span>
-                <div className="join border border-base-300 rounded-lg overflow-hidden">
-                  <button
-                    onClick={handleZoomOut}
-                    className="btn btn-ghost btn-xs join-item hover:bg-base-300"
-                    title="Zoom Out"
-                  >
-                    −
-                  </button>
-                  <button
-                    onClick={handleZoomIn}
-                    className="btn btn-ghost btn-xs join-item hover:bg-base-300"
-                    title="Zoom In"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-
-              <div className="h-[600px] w-full">
-                <Editor
-                  height="100%"
-                  language={selectedLanguage.toLowerCase()}
-                  theme="vs-dark"
-                  value={code}
-                  onChange={(value) => setCode(value || "")}
-                  options={{
-                    minimap: { enabled: false },
-                    fontSize: fontSize,
-                    mouseWheelZoom: true,
-                    lineNumbers: "on",
-                    automaticLayout: true,
-                    scrollBeyondLastLine: false,
-                  }}
-                />
-              </div>
-
-              <div className="p-4 border-t border-base-300 bg-base-200">
-                <div className="flex justify-between items-center">
-                  <button
-                    className={`btn btn-primary gap-2 ${isExecuting ? "loading" : ""
-                      }`}
-                    onClick={handleRunCode}
-                    disabled={isExecuting}
-                  >
-                    {!isExecuting && <Play className="w-4 h-4" />}
-                    Run Code
-                  </button>
-                  <button onClick={handleSubmit} className="btn btn-success gap-2">
-                    Submit Solution
-                  </button>
-                </div>
+                <button onClick={handleSubmit} className="btn btn-success btn-sm md:btn-md gap-2">
+                  Submit Solution
+                </button>
               </div>
             </div>
           </div>
         </div>
 
+        {/* TEST CASES TABLE (Separate Card) */}
         <div className="card bg-base-100 shadow-xl mt-6">
           <div className="card-body">
             {executionResult ? (
               <Submission submission={executionResult} />
             ) : (
               <>
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold">Test Cases</h3>
-                </div>
+                <h3 className="text-xl font-bold mb-6">Test Cases</h3>
                 <div className="overflow-x-auto">
                   <table className="table table-zebra w-full">
                     <thead>
@@ -454,8 +425,8 @@ const ProblemPage = () => {
                     <tbody>
                       {testcases.map((testCase, index) => (
                         <tr key={index}>
-                          <td className="font-mono">{testCase.input}</td>
-                          <td className="font-mono">{testCase.output}</td>
+                          <td className="font-mono text-sm">{testCase.input}</td>
+                          <td className="font-mono text-sm text-success">{testCase.output}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -466,7 +437,7 @@ const ProblemPage = () => {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 
