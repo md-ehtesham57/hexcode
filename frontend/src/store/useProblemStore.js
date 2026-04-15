@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { axiosInstance } from "../lib/axios";
 import { toast } from "react-hot-toast";
 
-export const useProblemStore = create((set) => ({
+export const useProblemStore = create((set, get) => ({
   problems: [],
   problem: null,
   solvedProblems: [],
@@ -25,22 +25,38 @@ export const useProblemStore = create((set) => ({
     }
   },
 
-  getProblemById: async (id) => {
-    try {
-      set({ isProblemLoading: true });
+getProblemById: async (id) => {
+  const { isProblemLoading, problem } = get();
 
-      const res = await axiosInstance.get(`/problems/get-problem/${id}`);
+  if (isProblemLoading) return;
 
-      set({ problem: res.data.problem });
+  // Standard PostgreSQL IDs are usually strings or numbers
+  if (problem?.id === id) {
+    set({ isProblemLoading: false }); 
+    return;
+  }
+
+  set({ isProblemLoading: true });
+  try {
+    const res = await axiosInstance.get(`/problems/get-problem/${id}`);
     
-      toast.success(res.data.message);
-    } catch (error) {
-      console.log("Error getting all problems", error);
-      toast.error("Error in getting problems");
-    } finally {
-      set({ isProblemLoading: false });
+    // Ensure we clear state if the backend sends an empty success 
+    if (!res.data.problem) {
+       set({ problem: null });
+       toast.error("Problem not found in PostgreSQL database.");
+    } else {
+       set({ problem: res.data.problem });
     }
-  },
+  } catch (error) {
+    set({ problem: null }); 
+    if (error.response?.status === 404) {
+      toast.error("404: This challenge no longer exists.");
+    }
+    console.error("Prisma Fetch Error:", error);
+  } finally {
+    set({ isProblemLoading: false });
+  }
+},
 
   getSolvedProblemByUser: async () => {
     try {
@@ -53,5 +69,5 @@ export const useProblemStore = create((set) => ({
     }
   }
 
-  
+
 }));

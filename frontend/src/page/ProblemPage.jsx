@@ -56,34 +56,82 @@ const ProblemPage = () => {
 
       setActiveTab("submissions");
     } catch (error) {
-      console.log("Submit error:" , error);
+      console.log("Submit error:", error);
     }
   };
 
   useEffect(() => {
-    getProblemById(id);
-    getSubmissionCountForProblem(id);
+    if (!id) return;
+
+    const loadData = async () => {
+      try {
+        await Promise.all([
+          getProblemById(id),
+          getSubmissionCountForProblem(id)
+        ]);
+      } catch (error) {
+        console.error("Problem not found, redirecting...");
+        toast.error("This problem no longer exists.");
+        navigate("/playlists");
+      }
+    };
+
+    loadData();
   }, [id]);
 
+  // Editor & Testcase Initialization
   useEffect(() => {
-    if (problem) {
-      setCode(
-        problem.codeSnippets?.[selectedLanguage] || submission?.sourceCode || ""
-      );
-      setTestCases(
-        problem.testcases?.map((tc) => ({
-          input: tc.input,
-          output: tc.output,
-        })) || []
-      );
-    }
-  }, [problem, selectedLanguage]);
+    if (!problem || (problem.id !== id && problem._id !== id)) return;
 
+    const initialCode = submission?.sourceCode || problem.codeSnippets?.[selectedLanguage] || "";
+    setCode(initialCode);
+
+    // Set testcases
+    const formattedTestCases = problem.testcases?.map((tc) => ({
+      input: tc.input,
+      output: tc.output,
+    })) || [];
+
+    setTestCases(formattedTestCases);
+
+  }, [problem, selectedLanguage, id]);
+
+  // Tab-based Fetching (On-Demand)
   useEffect(() => {
     if (activeTab === "submissions" && id) {
       getSubmissionForProblem(id);
     }
-  }, [activeTab, id ]);
+  }, [activeTab, id]);
+
+  if (isProblemLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-base-200">
+        <div className="card bg-base-100 p-8 shadow-xl">
+          <span className="loading loading-spinner loading-lg text-primary"></span>
+          <p className="mt-4 text-base-content/70">Verifying problem...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!problem) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen space-y-6 text-center">
+        <div className="opacity-20">
+          <h1 className="text-9xl font-black tracking-tighter">404</h1>
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-xl font-bold uppercase tracking-widest text-error">Problem Missing</h2>
+          <p className="text-base-content/50 max-w-xs">
+            This challenge appears to have been removed or the link is broken.
+          </p>
+        </div>
+        <Link to="/playlists" className="btn btn-outline btn-primary rounded-xl px-8">
+          Back to Collections
+        </Link>
+      </div>
+    );
+  }
 
   console.log("submission", submissions);
 
