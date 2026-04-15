@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 export const useSubmissionStore = create((set, get) => ({
   isLoading: false,
   submissions: [],
+  problemSubmissions: [],
   submission: null,
   submissionCount: null,
 
@@ -37,7 +38,7 @@ export const useSubmissionStore = create((set, get) => ({
       );
 
       set({
-        submissions: res.data.submissions || [],
+        problemSubmissions: res.data.submissions || [],
         submission: res.data.submission || null
       })
 
