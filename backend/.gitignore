@@ -8,6 +8,9 @@ node_modules
 .env*
 .env
 
+# Allowing this to push in github
+!.env.example
+
 # Logs
 logs
 *.log
