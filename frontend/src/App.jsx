@@ -16,6 +16,7 @@ import Dashboard from "./page/Dashboard";
 import ProfilePage from "./page/ProfilePage";
 import PlaylistsPage from "./page/PlaylistsPage";
 import PlaylistDetailsPage from "./page/PlaylistDetailsPage";
+import EditProblemPage from "./page/EditProblemPage";
 
 const App = () => {
   const authUser = useAuthStore((state) => state.authUser);
@@ -67,6 +68,11 @@ const App = () => {
           <Route element={<AdminRoute />}>
             <Route path="/add-problem" element={<AddProblem />} />
           </Route>
+
+          <Route
+            path="/edit-problem/:id"
+            element={authUser?.role === "ADMIN" ? <EditProblemPage /> : <Navigate to="/" />}
+          />
 
           <Route path="/playlists" element={authUser ? <PlaylistsPage /> : <Navigate to="/login" />} />
 

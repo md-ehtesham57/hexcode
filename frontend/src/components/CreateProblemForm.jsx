@@ -62,6 +62,21 @@ const problemSchema = z.object({
   }),
 });
 
+const getProblemSchema = (isEdit) => {
+  return z.object({
+    // .optional() allows the field to be empty during editing
+    title: isEdit ? z.string().optional() : z.string().min(3),
+    description: isEdit ? z.string().optional() : z.string().min(10),
+    difficulty: z.enum(["EASY", "MEDIUM", "HARD"]).optional(),
+    tags: z.array(z.string()).optional(),
+    constraints: z.string().optional(),
+    testcases: z.array(z.any()).optional(),
+    codeSnippets: z.record(z.string()).optional(),
+    referenceSolutions: z.record(z.string()).optional(),
+    examples: z.record(z.any()).optional(),
+  });
+};
+
 
 const sampledpData = {
   title: "Climbing Stairs",
@@ -439,7 +454,7 @@ class Main {
   },
 };
 
-const CreateProblemForm = () => {
+const CreateProblemForm = ({ initialData = null, isEdit = false }) => {
     console.log("CREATE PROBLEM FORM RENDERED");
     const [sampleType , setSampleType] = useState("DP")
     const navigation = useNavigate();
@@ -490,22 +505,51 @@ const CreateProblemForm = () => {
 
   const [isLoading , setIsLoading] = useState(false);
 
-  const onSubmit = async (value)=>{
-   try {
-    setIsLoading(true)
-    const res = await axiosInstance.post("/problems/create-problem" , value)
-    console.log(res.data);
-    toast.success(res.data.message || "Problem Created successfully⚡");
-    navigation("/");
+const onSubmit = async (values) => {
+  try {
+    setIsLoading(true);
 
-   } catch (error) {
-    console.log(error);
-    toast.error("Error creating problem")
-   }
-   finally{
-      setIsLoading(false);
-   }
+    const id = initialData?.id || initialData?._id;
+    const url = isEdit ? `/problems/update-problem/${id}` : "/problems/create-problem";
+
+    // DATA MERGING: 
+    // If we are editing, we merge the new values with initialData.
+    // This prevents sending empty strings for fields the user didn't touch.
+    const finalData = isEdit ? {
+      ...initialData, // Start with everything currently in the DB
+      ...values,      // Overwrite with whatever is in the form
+    } : values;       // If creating fresh, just use values
+
+    // CLEANING & FORMATTING
+    const payload = {
+      ...finalData,
+      // Map lowercase keys from form state to uppercase keys for backend
+      referenceSolutions: {
+        JAVASCRIPT: finalData.referenceSolutions?.JAVASCRIPT || finalData.referenceSolutions?.javascript,
+        PYTHON: finalData.referenceSolutions?.PYTHON || finalData.referenceSolutions?.python,
+        JAVA: finalData.referenceSolutions?.JAVA || finalData.referenceSolutions?.java,
+      },
+      codeSnippets: {
+        JAVASCRIPT: finalData.codeSnippets?.JAVASCRIPT || finalData.codeSnippets?.javascript,
+        PYTHON: finalData.codeSnippets?.PYTHON || finalData.codeSnippets?.python,
+        JAVA: finalData.codeSnippets?.JAVA || finalData.codeSnippets?.java,
+      }
+    };
+
+    // API CALL
+    const res = await axiosInstance[isEdit ? "put" : "post"](url, payload);
+    
+    toast.success(isEdit ? "Problem updated successfully! 🛠️" : "Problem created! ⚡");
+    navigation("/problems"); // Or wherever your list lives
+
+  } catch (error) {
+    console.error("Submission Error:", error);
+    const errorMsg = error.response?.data?.error || "Check your internet or logic.";
+    toast.error(errorMsg);
+  } finally {
+    setIsLoading(false);
   }
+};
 
   const loadSampleData=()=>{
     const sampleData = sampleType === "DP" ? sampledpData : sampleStringProblem

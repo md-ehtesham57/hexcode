@@ -6,9 +6,12 @@ import { useActions } from "../store/useAction";
 import AddToPlaylistModal from "./AddToPlaylist";
 import CreatePlaylistModel from "./CreatePlaylistModel";
 import { usePlaylistStore } from "../store/usePlaylistStore";
+import { useNavigate } from "react-router-dom";
+
 
 
 const ProblemsTable = ({ problems }) => {
+  const navigate = useNavigate();
   const { authUser } = useAuthStore();
   const { onDeleteProblem } = useActions();
   const { createPlaylist } = usePlaylistStore();
@@ -185,7 +188,11 @@ const ProblemsTable = ({ problems }) => {
                             >
                               <TrashIcon className="w-4 h-4 text-white" />
                             </button>
-                            <button disabled className="btn btn-sm btn-warning">
+                            <button
+                              onClick={() => navigate(`/edit-problem/${problem.id}`)}
+                              className='btn btn-sm btn-warning hover:bg-yellow-600 transition-colors'
+                              title="Edit Problem"
+                              >
                               <PencilIcon className="w-4 h-4 text-white" />
                             </button>
                           </div>
