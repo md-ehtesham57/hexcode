@@ -1,11 +1,10 @@
 import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
+import helmet from "helmet";
 import { apiLimiter } from "./middleware/auth.rateLimit.js";
 import passport from "./config/passport.js";
 import cors from "cors";
-
-
 
 import authRoutes from "./routes/auth.routes.js";
 import problemRoutes from "./routes/problem.routes.js";
@@ -16,8 +15,14 @@ import playlistRoutes from "./routes/playlist.routes.js";
 dotenv.config();
 
 const app = express();
+
+const allowedOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(",")
+    : ["http://localhost:5173"];
+
+app.use(helmet());
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: allowedOrigins,
     credentials: true,
 }));
 app.use(passport.initialize());

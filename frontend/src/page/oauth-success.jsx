@@ -1,17 +1,17 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../store/useAuthStore";
 
 const OAuthSuccess = () => {
   const navigate = useNavigate();
+  const setAccessToken = useAuthStore((state) => state.setAccessToken);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
 
-    console.log("TOKEN FROM URL:" , token); //debug
-
     if (token) {
-      localStorage.setItem("token", token);
+      setAccessToken(token);
       navigate("/");
     } else {
       navigate("/login");

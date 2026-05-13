@@ -9,6 +9,11 @@ export const axiosInstance = axios.create({
   withCredentials: true, // Required for HttpOnly Refresh Cookies
 });
 
+const API_BASE =
+  import.meta.env.MODE === "development"
+    ? "http://localhost:3000"
+    : "";
+
 // 2. Variables for Refresh Logic
 let isRefreshing = false;
 let failedQueue = [];
@@ -25,10 +30,11 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-// 3. Request Interceptor: Attach Access Token
+// 3. Request Interceptor: Attach Access Token from Zustand store
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    // Dynamic import to avoid circular dependency
+    const token = window.__ZUSTAND_AUTH_TOKEN;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -62,34 +68,30 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        console.log("Access token expired. Attempting silent refresh...");
-
         // Use raw axios to avoid interceptor loops
         const res = await axios.post(
-          import.meta.env.MODE === "development"
-            ? "http://localhost:3000/api/v1/auth/refresh"
-            : "/api/v1/auth/refresh",
+          `${API_BASE}/api/v1/auth/refresh`,
           {},
           { withCredentials: true }
         );
 
         const { accessToken } = res.data;
-        localStorage.setItem("token", accessToken);
+
+        // Store token in Zustand store via global ref
+        window.__ZUSTAND_AUTH_TOKEN = accessToken;
 
         // Update headers for future requests
         axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
 
-        console.log("Token refreshed. Retrying original request.");
         processQueue(null, accessToken);
         
         return axiosInstance(originalRequest);
       } catch (refreshError) {
-        console.error("Refresh failed. Session invalid.");
         processQueue(refreshError, null);
         
         // Clean up
-        localStorage.removeItem("token");
+        window.__ZUSTAND_AUTH_TOKEN = null;
         
         // Only redirect if not already on login to avoid loops
         if (!window.location.pathname.includes("/login")) {

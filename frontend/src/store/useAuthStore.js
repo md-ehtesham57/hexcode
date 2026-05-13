@@ -3,22 +3,30 @@ import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import { useSubmissionStore } from "./useSubmissionStore";
 
-export const useAuthStore = create((set) => ({
+const syncToken = (token) => {
+  window.__ZUSTAND_AUTH_TOKEN = token;
+};
+
+export const useAuthStore = create((set, get) => ({
   authUser: null,
+  accessToken: null,
   isSigninUp: false,
   isLoggingIn: false,
   isCheckingAuth: false,
+
+  setAccessToken: (token) => {
+    syncToken(token);
+    set({ accessToken: token });
+  },
 
   checkAuth: async () => {
     set({ isCheckingAuth: true });
     try {
       const res = await axiosInstance.get("/auth/check");
-      console.log("checkauth response", res.data);
-
       set({ authUser: res.data.user });
     } catch (error) {
-      console.log("❌ Error checking auth:", error);
-      set({ authUser: null });
+      syncToken(null);
+      set({ authUser: null, accessToken: null });
     } finally {
       set({ isCheckingAuth: false });
     }
@@ -29,11 +37,12 @@ export const useAuthStore = create((set) => ({
     try {
       const res = await axiosInstance.post("/auth/register", data);
 
-      set({ authUser: res.data.user });
+      const token = res.data.accessToken;
+      syncToken(token);
+      set({ authUser: res.data.user, accessToken: token });
 
       toast.success(res.data.message);
     } catch (error) {
-      console.log("Error signing up", error);
       toast.error("Error signing up");
     } finally {
       set({ isSigninUp: false });
@@ -45,11 +54,12 @@ export const useAuthStore = create((set) => ({
     try {
       const res = await axiosInstance.post("/auth/login", data);
 
-      set({ authUser: res.data.user });
+      const token = res.data.accessToken;
+      syncToken(token);
+      set({ authUser: res.data.user, accessToken: token });
 
       toast.success(res.data.message);
     } catch (error) {
-      console.log("Error logging in", error);
       toast.error("Error logging in");
     } finally {
       set({ isLoggingIn: false });
@@ -59,13 +69,13 @@ export const useAuthStore = create((set) => ({
   logout: async () => {
     try {
       await axiosInstance.post("/auth/logout");
-      set({ authUser: null });
+      syncToken(null);
+      set({ authUser: null, accessToken: null });
 
       useSubmissionStore.getState().reset();
 
       toast.success("Logout successful");
     } catch (error) {
-      console.log("Error logging out", error);
       toast.error("Error logging out");
     }
   },
@@ -101,7 +111,8 @@ export const useAuthStore = create((set) => ({
     if (!window.confirm("Are you sure? This cannot be undone.")) return;
     try {
       await axiosInstance.delete("/auth/delete-account");
-      set({ authUser: null });
+      syncToken(null);
+      set({ authUser: null, accessToken: null });
       toast.success("Account deleted");
     } catch (error) {
       toast.error("Failed to delete account");

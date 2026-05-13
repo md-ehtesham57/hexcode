@@ -4,9 +4,6 @@ import { UserRole } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import { registerSchema, loginSchema } from "../validators/auth.validator.js";
 import { randomUUID } from "crypto";
-import { error } from "console";
-
-
 export const register = async (req, res) => {
 
   try {
@@ -210,10 +207,6 @@ export const login = async (req, res) => {
   }
 };
 
-import { PrismaClient } from "@prisma/client";
-import { success } from "zod";
-const prisma = new PrismaClient();
-
 export const updateProfile = async (req, res) => {
   try {
     const { github, website, profilePic } = req.body;
@@ -314,7 +307,7 @@ export const refresh = async (req, res) => {
     //Verify refresh token
     let decoded;
     try {
-      decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+      decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET, { algorithms: ["HS256"] });
     } catch (err) {
       return res.status(403).json({ error: "Invalid refresh token" });
     }

@@ -24,9 +24,6 @@ const App = () => {
   const isCheckingAuth = useAuthStore((state) => state.isCheckingAuth);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
     checkAuth();
   }, []);
 

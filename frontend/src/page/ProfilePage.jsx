@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import AvatarPlaceholder from "../components/AvatarPlaceholder";
 
 const ProfilePage = () => {
-  const { authUser, isUpdatingProfile, updateProfile, deleteAccount } = useAuthStore();
+  const { authUser, isUpdatingProfile, updateProfile, changePassword, deleteAccount } = useAuthStore();
 
   // State for image handling and error fallback
   const [selectedImg, setSelectedImg] = useState(null);
@@ -21,8 +21,13 @@ const ProfilePage = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (!file || file.size > 1024 * 1024) {
-      return toast.error("File is missing or too large (>1MB)");
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowedTypes.includes(file.type)) {
+      return toast.error("Invalid file type. Allowed: JPEG, PNG, WebP, GIF");
+    }
+
+    if (file.size > 1024 * 1024) {
+      return toast.error("File is too large (>1MB)");
     }
 
     const reader = new FileReader();
@@ -30,7 +35,6 @@ const ProfilePage = () => {
     reader.onload = async () => {
       const base64Image = reader.result;
       setSelectedImg(base64Image);
-      // Ensure your backend controller expects 'profilePic' or 'image'
       await updateProfile({ profilePic: base64Image });
     };
   };

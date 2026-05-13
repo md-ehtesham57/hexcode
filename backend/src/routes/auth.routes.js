@@ -4,9 +4,11 @@ import { authMiddleware } from "../middleware/auth.middleware.js";
 import { authLimiter } from "../middleware/auth.rateLimit.js";
 import passport from "../config/passport.js";
 import { updateProfile , changePassword } from "../controllers/auth.controller.js";
-//temp route
+import { checkAdmin } from "../middleware/auth.middleware.js";
 import { db } from "../libs/db.js";
 
+
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 const authRoutes = express.Router();
 
@@ -29,7 +31,7 @@ authRoutes.get(
   "/google/callback",
   passport.authenticate("google", {
     session: false,
-    failureRedirect: "http://localhost:5173/login"
+    failureRedirect: `${FRONTEND_URL}/login`
   }),
   (req, res) => {
     res.cookie("refreshToken", req.user.refreshToken, {
@@ -42,7 +44,7 @@ authRoutes.get(
     const { accessToken } = req.user;
 
     res.redirect(
-      `http://localhost:5173/oauth-success?token=${accessToken}`
+      `${FRONTEND_URL}/oauth-success?token=${accessToken}`
     );
   }
 );
@@ -73,7 +75,7 @@ authRoutes.get(
     const { accessToken } = req.user;
 
     res.redirect(
-      `http://localhost:5173/oauth-success?token=${accessToken}`
+      `${FRONTEND_URL}/oauth-success?token=${accessToken}`
     );
   }
 );
@@ -84,8 +86,7 @@ authRoutes.get("/check", authMiddleware, check);
 
 authRoutes.post("/refresh", authLimiter, refresh);
 
-//Temp routes
-authRoutes.post("/ban/:userId", async (req, res) => {
+authRoutes.post("/ban/:userId", authMiddleware, checkAdmin, async (req, res) => {
   const { userId } = req.params;
 
   await db.user.update({
@@ -100,8 +101,7 @@ authRoutes.post("/ban/:userId", async (req, res) => {
   res.json({ success: true, message: "User banned" });
 });
 
-//Unban temp route
-authRoutes.post("/unban/:userId", async (req, res) => {
+authRoutes.post("/unban/:userId", authMiddleware, checkAdmin, async (req, res) => {
   const { userId } = req.params;
 
   await db.user.update({

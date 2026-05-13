@@ -14,6 +14,10 @@ export const getJudge0LanguageId = (Language) => {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const judge0Headers = process.env.JUDGE0_API_TOKEN
+    ? { "X-RapidAPI-Key": process.env.JUDGE0_API_TOKEN }
+    : {};
+
 export const pollBatchResults = async (tokens) => {
     let attempts = 0;
     const MAX_ATTEMPTS = 10;
@@ -24,7 +28,8 @@ export const pollBatchResults = async (tokens) => {
                 params: {
                     tokens: tokens.join(","),
                     base64_encoded: false,
-                }
+                },
+                headers: judge0Headers,
             });
             data = response.data;
         } catch (error) {
@@ -54,7 +59,8 @@ export const submitBatch = async (submissions) => {
   try {
     const response = await axios.post(
       `${process.env.JUDGE0_API_URL}/submissions/batch?base64_encoded=false`,
-      { submissions }
+      { submissions },
+      { headers: judge0Headers }
     );
 
     const data = response.data;
