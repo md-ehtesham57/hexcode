@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useSubmissionStore } from "../store/useSubmissionStore";
 import {
@@ -30,7 +30,6 @@ const ProfilePage = () => {
 
   const [selectedImg, setSelectedImg] = useState(null);
   const [imgError, setImgError] = useState(false);
-  const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState("");
   const [links, setLinks] = useState({ github: "", website: "" });
   const [showPasswordForm, setShowPasswordForm] = useState(false);
@@ -44,6 +43,7 @@ const ProfilePage = () => {
     if (authUser) {
       setLinks({ github: authUser.github || "", website: authUser.website || "" });
       setNameInput(authUser.name || "");
+      setSelectedImg(null);
     }
   }, [authUser]);
 
@@ -53,6 +53,25 @@ const ProfilePage = () => {
       getAllSubmissions();
     }
   }, [authUser, getAllSubmissions, submissions.length]);
+
+  const hasUnsavedChanges = useMemo(() => {
+    if (!authUser) return false;
+    const nameChanged = nameInput.trim() !== (authUser.name || "");
+    const githubChanged = links.github !== (authUser.github || "");
+    const websiteChanged = links.website !== (authUser.website || "");
+    const imageChanged = selectedImg !== null && selectedImg !== authUser.image;
+    return nameChanged || githubChanged || websiteChanged || imageChanged;
+  }, [authUser, nameInput, links, selectedImg]);
+
+  const pendingCount = useMemo(() => {
+    if (!authUser) return 0;
+    let count = 0;
+    if (nameInput.trim() !== (authUser.name || "")) count++;
+    if (links.github !== (authUser.github || "")) count++;
+    if (links.website !== (authUser.website || "")) count++;
+    if (selectedImg !== null && selectedImg !== authUser.image) count++;
+    return count;
+  }, [authUser, nameInput, links, selectedImg]);
 
   const solvedCount = [...new Set(
     submissions.filter(s => s.status === "Accepted").map(s => s.problemId)
@@ -70,25 +89,29 @@ const ProfilePage = () => {
     if (file.size > 1024 * 1024) return toast.error("File is too large (>1MB)");
     const reader = new FileReader();
     reader.readAsDataURL(file);
-    reader.onload = async () => {
+    reader.onload = () => {
       setSelectedImg(reader.result);
-      await updateProfile({ profilePic: reader.result });
+      setImgError(false);
     };
   };
 
-  const handleSaveName = async () => {
-    const trimmed = nameInput.trim();
-    if (!trimmed) return toast.error("Name cannot be empty");
-    if (trimmed === authUser.name) return setEditingName(false);
-    await updateProfile({ name: trimmed });
-    setEditingName(false);
-  };
-
-  const handleSaveLinks = async () => {
-    if (links.github === authUser?.github && links.website === authUser?.website) {
+  const handleSaveAll = async () => {
+    if (!authUser || !hasUnsavedChanges) {
       return toast.error("No changes detected");
     }
-    await updateProfile(links);
+
+    const payload = {};
+    const nameTrimmed = nameInput.trim();
+    if (nameTrimmed !== (authUser.name || "")) payload.name = nameTrimmed;
+    if (links.github !== (authUser.github || "")) payload.github = links.github;
+    if (links.website !== (authUser.website || "")) payload.website = links.website;
+    if (selectedImg !== null && selectedImg !== authUser.image) payload.profilePic = selectedImg;
+
+    if (Object.keys(payload).length === 0) {
+      return toast.error("No changes detected");
+    }
+
+    await updateProfile(payload);
   };
 
   const handleChangePassword = async (e) => {
@@ -120,7 +143,7 @@ const ProfilePage = () => {
   const providerLabel = provider === "GOOGLE" ? "Google" : provider === "GITHUB" ? "GitHub" : "Email";
 
   return (
-    <div className="min-h-screen pt-10 pb-20 px-4 animate-in fade-in duration-700">
+    <div className="min-h-screen pt-10 pb-32 px-4 animate-in fade-in duration-700 relative">
       <div className="max-w-4xl mx-auto space-y-6">
 
         {/* ========== HERO ========== */}
@@ -128,53 +151,44 @@ const ProfilePage = () => {
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-secondary to-accent" />
           <div className="flex flex-col sm:flex-row items-center gap-6">
             <div className="relative group shrink-0">
-              <div className="w-28 h-28 rounded-full ring-4 ring-primary/10 p-1 bg-base-200 overflow-hidden flex items-center justify-center">
-                {!imgError ? (
-                  <img
-                    src={selectedImg || authUser?.image || `https://ui-avatars.com/api/?name=${authUser?.name}&background=4f46e5&color=fff`}
-                    alt="Profile"
-                    className="w-full h-full rounded-full object-cover transition-transform group-hover:scale-110"
-                    onError={() => setImgError(true)}
-                  />
-                ) : (
-                  <AvatarPlaceholder className="w-full h-full" />
+              <div className="indicator">
+                {isUpdatingProfile && (
+                  <span className="indicator-item indicator-middle indicator-center z-10">
+                    <span className="loading loading-ring loading-lg text-primary" />
+                  </span>
                 )}
+                <div className={`w-28 h-28 rounded-full ring-4 p-1 bg-base-200 overflow-hidden flex items-center justify-center transition-all ${isUpdatingProfile ? "ring-primary/50 blur-sm" : "ring-primary/10"}`}>
+                  {!imgError ? (
+                    <img
+                      src={selectedImg || authUser?.image || `https://ui-avatars.com/api/?name=${authUser?.name}&background=4f46e5&color=fff`}
+                      alt="Profile"
+                      className="w-full h-full rounded-full object-cover transition-transform group-hover:scale-110"
+                      onError={() => setImgError(true)}
+                    />
+                  ) : (
+                    <AvatarPlaceholder className="w-full h-full" />
+                  )}
+                </div>
               </div>
               <label
                 htmlFor="avatar-upload"
-                className="absolute bottom-0 right-0 bg-primary p-2 rounded-full cursor-pointer shadow-lg hover:scale-110 active:scale-95 transition-all"
+                className={`absolute bottom-0 right-0 p-2 rounded-full cursor-pointer shadow-lg transition-all ${isUpdatingProfile ? "bg-base-300 pointer-events-none" : "bg-primary hover:scale-110 active:scale-95"}`}
               >
-                <Camera className="w-4 h-4 text-primary-content" />
+                {isUpdatingProfile ? <Loader className="w-4 h-4 animate-spin text-base-content" /> : <Camera className="w-4 h-4 text-primary-content" />}
                 <input type="file" id="avatar-upload" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isUpdatingProfile} />
               </label>
+              {selectedImg && !isUpdatingProfile && (
+                <button
+                  onClick={() => setSelectedImg(null)}
+                  className="absolute -top-1 -right-1 bg-error text-error-content rounded-full w-5 h-5 flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
             </div>
 
             <div className="flex-1 text-center sm:text-left space-y-1.5">
-              {editingName ? (
-                <div className="flex items-center gap-2 justify-center sm:justify-start">
-                  <input
-                    type="text"
-                    value={nameInput}
-                    onChange={(e) => setNameInput(e.target.value)}
-                    className="input input-bordered input-sm w-56 font-bold text-lg"
-                    autoFocus
-                    onKeyDown={(e) => { if (e.key === "Enter") handleSaveName(); if (e.key === "Escape") { setNameInput(authUser?.name || ""); setEditingName(false); } }}
-                  />
-                  <button onClick={handleSaveName} className="btn btn-primary btn-xs btn-circle" disabled={isUpdatingProfile}>
-                    {isUpdatingProfile ? <Loader className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                  </button>
-                  <button onClick={() => { setNameInput(authUser?.name || ""); setEditingName(false); }} className="btn btn-ghost btn-xs btn-circle">
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 justify-center sm:justify-start group/name">
-                  <h1 className="text-2xl sm:text-3xl font-black tracking-tight">{authUser?.name}</h1>
-                  <button onClick={() => setEditingName(true)} className="btn btn-ghost btn-xs btn-circle opacity-0 group-hover/name:opacity-100 transition-opacity">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
-                  </button>
-                </div>
-              )}
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight">{authUser?.name}</h1>
               <div className="flex items-center gap-2 justify-center sm:justify-start flex-wrap">
                 <div className="badge badge-primary badge-outline font-mono text-[10px] uppercase tracking-tighter">
                   {authUser?.role || "USER"}
@@ -227,7 +241,17 @@ const ProfilePage = () => {
                   <label className="label"><span className="label-text font-bold opacity-50 uppercase text-[10px]">Full Name</span></label>
                   <div className="relative">
                     <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 opacity-30" />
-                    <input type="text" value={authUser?.name || ""} readOnly className="input input-bordered w-full pl-11 bg-base-200/50 cursor-not-allowed" />
+                    <input
+                      type="text"
+                      value={nameInput}
+                      onChange={(e) => setNameInput(e.target.value)}
+                      className={`input input-bordered w-full pl-11 ${nameInput.trim() !== (authUser?.name || "") ? "input-warning" : ""}`}
+                    />
+                    {nameInput.trim() !== (authUser?.name || "") && (
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                        <span className="badge badge-warning badge-xs">edited</span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="form-control">
@@ -258,7 +282,11 @@ const ProfilePage = () => {
                     placeholder="github.com/username"
                     className="bg-transparent border-none outline-none text-sm flex-1"
                   />
+                  {links.github !== (authUser?.github || "") && (
+                    <span className="badge badge-warning badge-xs shrink-0">edited</span>
+                  )}
                 </div>
+
                 <div className="flex items-center gap-3 p-3 bg-base-200/50 rounded-2xl group transition-colors hover:bg-base-200">
                   <Globe className="w-5 h-5 opacity-50 group-hover:text-primary transition-colors shrink-0" />
                   <input
@@ -268,15 +296,10 @@ const ProfilePage = () => {
                     placeholder="yourportfolio.com"
                     className="bg-transparent border-none outline-none text-sm flex-1"
                   />
+                  {links.website !== (authUser?.website || "") && (
+                    <span className="badge badge-warning badge-xs shrink-0">edited</span>
+                  )}
                 </div>
-                <button
-                  onClick={handleSaveLinks}
-                  disabled={isUpdatingProfile}
-                  className="btn btn-primary btn-sm rounded-xl w-fit"
-                >
-                  {isUpdatingProfile ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                  Save Changes
-                </button>
               </div>
             </div>
 
@@ -368,6 +391,33 @@ const ProfilePage = () => {
               </button>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* ========== STICKY SAVE FOOTER ========== */}
+      <div className="sticky bottom-0 z-40 mt-8 -mx-4 px-4 py-4 bg-base-300/80 backdrop-blur-md border-t border-base-content/10">
+        <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            {hasUnsavedChanges && (
+              <>
+                <div className="w-2 h-2 rounded-full bg-warning animate-pulse" />
+                <p className="text-sm font-bold">
+                  <span className="text-warning">{pendingCount}</span> unsaved change{pendingCount > 1 ? "s" : ""}
+                </p>
+              </>
+            )}
+            {!hasUnsavedChanges && (
+              <p className="text-xs opacity-40">All changes saved</p>
+            )}
+          </div>
+          <button
+            onClick={handleSaveAll}
+            disabled={isUpdatingProfile}
+            className="btn btn-primary rounded-xl"
+          >
+            {isUpdatingProfile ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            Save Changes
+          </button>
         </div>
       </div>
 
