@@ -13,6 +13,7 @@ export const useAuthStore = create((set, get) => ({
   isSigninUp: false,
   isLoggingIn: false,
   isCheckingAuth: false,
+  isUpdatingProfile: false,
 
   setAccessToken: (token) => {
     syncToken(token);
@@ -108,14 +109,13 @@ export const useAuthStore = create((set, get) => ({
   },
 
   deleteAccount: async () => {
-    if (!window.confirm("Are you sure? This cannot be undone.")) return;
     try {
       await axiosInstance.delete("/auth/delete-account");
       syncToken(null);
       set({ authUser: null, accessToken: null });
       toast.success("Account deleted");
     } catch (error) {
-      toast.error("Failed to delete account");
+      toast.error(error.response?.data?.error || "Failed to delete account");
     }
   }
 }));

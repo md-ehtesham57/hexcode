@@ -24,6 +24,7 @@ import { useExecutionStore } from "../store/useExecutionStore";
 import { useSubmissionStore } from "../store/useSubmissionStore";
 import Submission from "../components/Submission";
 import SubmissionsList from "../components/SubmissionList";
+import toast from "react-hot-toast";
 
 const ProblemPage = () => {
   const { id } = useParams();
@@ -52,9 +53,25 @@ const ProblemPage = () => {
   const { executeCode, executionResult, isExecuting } = useExecutionStore();
 
   const handleSubmit = async () => {
-    try {
-      await getSubmissionForProblem(id);
+    const starterCode = problem?.codeSnippets?.[selectedLanguage] || "";
+    if (code.trim() === starterCode.trim()) {
+      toast.error("Write your solution before submitting");
+      return;
+    }
 
+    try {
+      const language_id = getLanguageId(selectedLanguage);
+      const stdin = problem?.testcases?.map((tc) => tc.input);
+      const expected_outputs = problem?.testcases?.map((tc) => tc.output);
+      await executeCode(code, language_id, stdin, expected_outputs, id, true);
+
+      const result = useExecutionStore.getState().executionResult;
+      if (result?.status !== "Accepted") {
+        toast.error("Fix all test cases before submitting");
+        return;
+      }
+
+      await getSubmissionForProblem(id);
       setActiveTab("submissions");
     } catch (error) {
       console.log("Submit error:", error);

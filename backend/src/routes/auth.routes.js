@@ -3,7 +3,7 @@ import { login, logout, register, check, refresh } from "../controllers/auth.con
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { authLimiter } from "../middleware/auth.rateLimit.js";
 import passport from "../config/passport.js";
-import { updateProfile , changePassword } from "../controllers/auth.controller.js";
+import { updateProfile , changePassword, deleteAccount } from "../controllers/auth.controller.js";
 import { checkAdmin } from "../middleware/auth.middleware.js";
 import { db } from "../libs/db.js";
 
@@ -85,6 +85,8 @@ authRoutes.post("/logout", authMiddleware, logout);
 authRoutes.get("/check", authMiddleware, check);
 
 authRoutes.post("/refresh", authLimiter, refresh);
+
+authRoutes.delete("/delete-account", authMiddleware, deleteAccount);
 
 authRoutes.post("/ban/:userId", authMiddleware, checkAdmin, async (req, res) => {
   const { userId } = req.params;

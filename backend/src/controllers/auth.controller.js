@@ -209,15 +209,16 @@ export const login = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
   try {
-    const { github, website, profilePic } = req.body;
+    const { name, github, website, profilePic } = req.body;
     const userId = req.user.id;
 
     const updatedUser = await db.user.update({
       where: { id: userId },
       data: {
-        github: github || "",
-        website: website || "",
-        image: profilePic,
+        ...(name !== undefined && { name }),
+        ...(github !== undefined && { github }),
+        ...(website !== undefined && { website }),
+        ...(profilePic !== undefined && { image: profilePic }),
       },
     });
 
@@ -279,6 +280,7 @@ export const check = async (req, res) => {
         image: true,
         github: true,   
         website: true, 
+        provider: true,
         createdAt: true,
       }
     });
@@ -397,6 +399,36 @@ export const refresh = async (req, res) => {
     res.status(500).json({
       error: "Failed to refresh token"
     });
+  }
+};
+
+export const deleteAccount = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    await db.session.deleteMany({ where: { userId } });
+    await db.testCaseResult.deleteMany({
+      where: { submission: { userId } },
+    });
+    await db.submission.deleteMany({ where: { userId } });
+    await db.problemSolved.deleteMany({ where: { userId } });
+    await db.problemInPlaylist.deleteMany({
+      where: { playlist: { userId } },
+    });
+    await db.playlist.deleteMany({ where: { userId } });
+    await db.problem.deleteMany({ where: { userId } });
+    await db.user.delete({ where: { id: userId } });
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      sameSite: "strict",
+      secure: process.env.NODE_ENV !== "development",
+    });
+
+    res.status(200).json({ success: true, message: "Account deleted permanently" });
+  } catch (error) {
+    console.error("Delete account error:", error);
+    res.status(500).json({ error: "Failed to delete account" });
   }
 };
 

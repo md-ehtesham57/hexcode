@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom"; 
 import { useAuthStore } from "../store/useAuthStore";
 import { useSubmissionStore } from "../store/useSubmissionStore";
@@ -8,12 +8,14 @@ const Dashboard = () => {
     const { authUser } = useAuthStore();
     //Make sure 'isFetching' or 'loading' is pulled from your store
     const { submissions, getAllSubmissions, isFetching } = useSubmissionStore(); 
+    const fetchedRef = useRef(false);
 
     useEffect(() => {
-        //The Guard: Only fetch if we have a user and data is missing
-        if (authUser && submissions.length === 0) {
+        if (authUser && submissions.length === 0 && !fetchedRef.current) {
+            fetchedRef.current = true;
             getAllSubmissions();
         }
+        return () => { fetchedRef.current = false; };
     }, [authUser, getAllSubmissions, submissions.length]);
 
     //Safety Check: If data is still loading, show a spinner instead of broken cards

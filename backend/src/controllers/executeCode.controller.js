@@ -7,7 +7,7 @@ import {
 
 export const executeCode = async (req, res) => {
   try {
-    const { source_code, language_id, stdin, expected_outputs, problemId } =
+    const { source_code, language_id, stdin, expected_outputs, problemId, submit } =
       req.body;
 
     const userId = req.user.id;
@@ -71,6 +71,18 @@ export const executeCode = async (req, res) => {
     });
 
     console.log(detailedResults);
+
+    // If this is a submission and not all tests pass, return without saving
+    if (submit && !allPassed) {
+      return res.status(200).json({
+        success: false,
+        message: "Wrong Answer",
+        submission: {
+          status: "Wrong Answer",
+          testCases: detailedResults,
+        },
+      });
+    }
 
     // store submission summary
     const submission = await db.submission.create({
